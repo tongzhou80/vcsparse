@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="react",                 # Name of the package
+    name="react-compiler",                 # Name of the package
     version="0.1.0",                    # Version
     author="Tong Zhou",                 # Your name
     author_email="zt9465@gmail.com", # Your email

@@ -1,16 +1,13 @@
 import inspect
 from react import *
 
-def f0(a: Index('i,j')):
-    s = sum(a, axis=1)
-    b = a / s[:, None]
-    return b
+def f0(alpha, x: Index('i'), y: Index('i')):
+    return alpha * x + y
 
-def f1(b: Index('i,j'), c: Index('i,j'), d: Index('i,k'), e: Index('k,j')):
-    a = (b + c) * (d @ e)
-    return a
+def f1(A: Index('i,j'), b: Index('j')):
+    return relu(A + b)
 
 
-for f in [f0, f1]:
-    tree = compile_from_src(inspect.getsource(f))
-    print(ast_to_code(tree))
+for f in [f0,]:
+    newcode = compile_from_src(inspect.getsource(f))
+    print(newcode)
