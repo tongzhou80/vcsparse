@@ -51,6 +51,11 @@ class AttachIndexNotation(ast.NodeTransformer):
         if isinstance(node.func, ast.Name):
             if node.func.id in ('relu', 'exp', 'log', 'neg', 'abs', 'where'):
                 node.indices = self.indices_map[node.args[0].id]
+            elif node.func.id in ['sum', 'max', 'min']:
+                full_indices = self.indices_map[node.args[0].id]
+                axis = node.args[1].value
+                del full_indices[axis]
+                node.indices = full_indices
         return node
 
     def visit_Assign(self, node):
