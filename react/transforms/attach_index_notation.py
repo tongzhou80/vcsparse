@@ -31,9 +31,8 @@ class AttachIndexNotation(ast.NodeTransformer):
         return node
 
     def visit_Assign(self, node):
-#        dump(node)
         assert isinstance(node.targets[0], ast.Name)
-        self.generic_visit(node.value)
+        self.generic_visit(node)
         self.indices_map[node.targets[0].id] = node.value.indices
         return node
 
