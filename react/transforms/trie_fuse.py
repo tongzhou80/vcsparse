@@ -1,4 +1,5 @@
 import ast
+from ast_transforms.utils import *
 
 class TrieFuse(ast.NodeTransformer):
     def visit_FunctionDef(self, node):
@@ -14,9 +15,19 @@ class TrieFuse(ast.NodeTransformer):
         if len(loops) == 0:
             return
         
-        host = loops[0]
+        host = None
+        for i,l in enumerate(loops):
+            if not hasattr(l, 'is_reduction'):
+                host = l
+                break
+
+        # print('host: ')
+        # dump(host)
+        if host is None:
+            return
+
         loops_to_be_removed = []
-        for loop in loops[1:]:
+        for loop in loops[(i+1):]:  # starting from the (i+1)th loop
             if host.target.id == loop.target.id:
                 host.body.extend(loop.body)
                 loops_to_be_removed.append(loop)
