@@ -14,7 +14,7 @@ class AttachIndexNotation(ast.NodeTransformer):
                 index_str = arg.annotation.args[0].value
                 indices = index_str.split(',')
             self.indices_map[varname] = indices
-        node.indices = indices
+        node.indices_map = self.indices_map
         self.generic_visit(node)
         return node
 
@@ -41,9 +41,11 @@ class AttachIndexNotation(ast.NodeTransformer):
         return node
 
     def visit_Assign(self, node):
-        assert isinstance(node.targets[0], ast.Name)
+        target = node.targets[0]
+        assert isinstance(target, ast.Name)
         self.generic_visit(node)
-        self.indices_map[node.targets[0].id] = node.value.indices
+        self.indices_map[target.id] = node.value.indices
+        target.indices = node.value.indices
         node.type_comment = 'indices: ' + str(node.value.indices)
         return node
 
