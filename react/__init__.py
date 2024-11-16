@@ -15,6 +15,7 @@ def compile_from_src(src, **options):
         tree = trie_fuse.transform(tree)
     tree = apply_transform_on_ast(tree, "add_func_decorator", "numba.jit")
     tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
+    tree = apply_transform_on_ast(tree, "where_to_ternary")
     return ast_to_code(tree)
 
 def ast_to_code(tree):
