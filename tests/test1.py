@@ -12,5 +12,5 @@ def f2(alpha, A: Index('i,j')):
 
 
 for f in [f0, f1, f2]:
-    newcode = compile_from_src(inspect.getsource(f))
+    newcode = compile_from_src(inspect.getsource(f), trie_fuse=False)
     print(newcode)

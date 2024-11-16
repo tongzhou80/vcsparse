@@ -36,13 +36,22 @@ class OpToLoop(ast.NodeTransformer):
         return None
 
     def visit_Assign(self, node):
+        target = node.targets[0]
+        assert isinstance(target, ast.Name)
         indices = node.targets[0].indices
+        alloc = new_ast_assign(
+            new_ast_name(target.id),
+            new_ast_call(
+                new_ast_name('zeros'),
+                new_ast_node_from_str(f'({",".join([self.index_range[i] for i in indices])})')
+            )
+        )
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
             [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in indices],
             [NameToSubscript(self.indices_map).visit(node)]
         )
-        return loop
+        return alloc, loop
 
 def transform(node, trie_fuse=False):
     return OpToLoop(trie_fuse).visit(node)
