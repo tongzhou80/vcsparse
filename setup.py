@@ -16,5 +16,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.9',            # Minimum Python version requirement
-    install_requires=[],
+    install_requires=['astlib'],
 )
