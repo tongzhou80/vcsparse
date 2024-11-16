@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="react-compiler",                 # Name of the package
-    version="0.1.0",                    # Version
+    version="0.1.1",                    # Version
     author="Tong Zhou",                 # Your name
     author_email="zt9465@gmail.com", # Your email
     description="Redundancy-Aware Code Generation for Tensor Expressions", # Short description
@@ -16,5 +16,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.9',            # Minimum Python version requirement
-    install_requires=['astlib'],
+    install_requires=['ast-transforms'],
 )

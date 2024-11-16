@@ -38,10 +38,18 @@ class AttachIndexNotation(ast.NodeTransformer):
             assert False
         return node
 
+    def visit_Compare(self, node):
+        node.indices = []
+        for operand in node.left, node.comparators:
+            if isinstance(operand, ast.Name):
+                if len(self.indices_map[operand.id]) > len(node.indices):
+                    node.indices = self.indices_map[operand.id]
+        return node
+
     def visit_Call(self, node):
         self.generic_visit(node)
         if isinstance(node.func, ast.Name):
-            if node.func.id in ('relu', 'exp', 'log', 'neg', 'abs'):
+            if node.func.id in ('relu', 'exp', 'log', 'neg', 'abs', 'where'):
                 node.indices = self.indices_map[node.args[0].id]
         return node
 

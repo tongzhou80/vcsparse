@@ -9,6 +9,7 @@ def compile_from_src(src, **options):
     tree = ast.parse(src)
     tree = apply_transform_on_ast(tree, "to_single_op_form")
     tree = attach_index_notation.transform(tree)
+    tree = op_to_loop.transform(tree)
     tree = apply_transform_on_ast(tree, "add_func_decorator", "numba.jit")
     tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
     return ast_to_code(tree)
