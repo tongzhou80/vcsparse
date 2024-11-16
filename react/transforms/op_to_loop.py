@@ -42,8 +42,7 @@ class OpToLoop(ast.NodeTransformer):
         assert isinstance(target, ast.Name)
 
         indices = []
-        for v in node.def_vars + node.use_vars:
-            print(v, self.indices_map[v])
+        for v in node.def_vars + node.use_vars:            
             for i in self.indices_map[v]:
                 if i not in indices:
                     indices.append(i)
@@ -53,7 +52,22 @@ class OpToLoop(ast.NodeTransformer):
             [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in indices],
             [NameToSubscript(self.indices_map).visit(node)]
         )
+
+        if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min']:
+            axis = node.value.args[1].value
+            reduction_index = self.indices_map[node.use_vars[0]][axis]
+            loop = MarkLoopAsReduction(reduction_index).visit(loop)
         return loop
+
+class MarkLoopAsReduction(ast.NodeTransformer):
+    def __init__(self, reduction_index):
+        self.reduction_index = reduction_index
+
+    def visit_For(self, node):
+        if node.target.id == self.reduction_index:
+            node.is_reduction = True
+        self.generic_visit(node)
+        return node
 
 def transform(node, trie_fuse=False):
     return OpToLoop(trie_fuse).visit(node)
