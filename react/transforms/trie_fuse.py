@@ -16,13 +16,12 @@ class TrieFuse(ast.NodeTransformer):
             return
         
         host = None
+        # Make the first non-reduction loop host
         for i,l in enumerate(loops):
             if not hasattr(l, 'is_reduction'):
                 host = l
                 break
 
-        # print('host: ')
-        # dump(host)
         if host is None:
             return
 
