@@ -40,7 +40,14 @@ class OpToLoop(ast.NodeTransformer):
             return node
         target = node.targets[0]
         assert isinstance(target, ast.Name)
-        indices = node.targets[0].indices
+
+        indices = []
+        for v in node.def_vars + node.use_vars:
+            print(v, self.indices_map[v])
+            for i in self.indices_map[v]:
+                if i not in indices:
+                    indices.append(i)
+
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
             [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in indices],
