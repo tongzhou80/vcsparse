@@ -88,7 +88,7 @@ class FixReductionAssign(ast.NodeTransformer):
 class InsertInitialization(ast.NodeTransformer):
     def __init__(self, indices, initialization):
         self.initialization = initialization
-        self.indices = indices
+        self.indices = indices.copy()
 
     def visit_For(self, node):
         if node.target.id in self.indices:
