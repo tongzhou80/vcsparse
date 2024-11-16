@@ -57,6 +57,11 @@ class OpToLoop(ast.NodeTransformer):
             axis = node.value.args[1].value
             reduction_index = self.indices_map[node.use_vars[0]][axis]
             loop = MarkLoopAsReduction(reduction_index).visit(loop)
+            initialization = new_ast_assign(
+                node.targets[0],
+                get_init_value_for_reduction(node.value.func.id)
+            )
+            loop = InsertInitialization(self.indices_map[node.def_vars[0]], initialization).visit(loop)
         return loop
 
 class InsertInitialization(ast.NodeTransformer):
@@ -70,7 +75,8 @@ class InsertInitialization(ast.NodeTransformer):
 
         if len(self.indices) == 0:
             node.body.insert(0, self.initialization)
-        self.generic_visit(node)
+        else:
+            self.generic_visit(node)
         return node
 
 class MarkLoopAsReduction(ast.NodeTransformer):
