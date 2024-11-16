@@ -30,6 +30,13 @@ class AttachIndexNotation(ast.NodeTransformer):
             assert False
         return node
 
+    def visit_Call(self, node):
+        self.generic_visit(node)
+        if isinstance(node.func, ast.Name):
+            if node.func.id in ('relu', 'exp', 'log', 'neg', 'abs'):
+                node.indices = self.indices_map[node.args[0].id]
+        return node
+
     def visit_Assign(self, node):
         assert isinstance(node.targets[0], ast.Name)
         self.generic_visit(node)

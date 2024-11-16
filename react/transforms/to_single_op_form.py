@@ -1,4 +1,5 @@
 import ast
+from .utils import *
 
 class BinaryOpToAssign(ast.NodeTransformer):
     def __init__(self):
@@ -33,7 +34,18 @@ class ToSingleOperatorStmts(ast.NodeTransformer):
         if isinstance(node.value, ast.BinOp):
             visitor = BinaryOpToAssign()
             assign = visitor.visit(node.value)
-            node.value = assign.targets[0]
+            #node.value = assign.targets[0]
+            node.value = ast.Name(id = assign.targets[0].id, ctx = ast.Load())
+            return visitor.stmts + [node]
+        elif isinstance(node.value, ast.Call):
+            visitor = BinaryOpToAssign()
+            newargs = [visitor.visit(arg) for arg in node.value.args]
+            node.value.args = []
+            for newargs in newargs:
+                if isinstance(newargs, ast.Assign):
+                    node.value.args.append(ast.Name(id = newargs.targets[0].id, ctx = ast.Load()))
+                else:
+                    node.value.args.append(newargs)
             return visitor.stmts + [node]
         else:
             return node
