@@ -16,5 +16,5 @@ def f3(A: Index('i,j')):
 
 
 for f in [f0, f1, f2, f3]:
-    newcode = compile_from_src(inspect.getsource(f), trie_fuse=1)
+    newcode = compile_from_src(inspect.getsource(f), trie_fuse=1, parallelize=1)
     print(newcode)
