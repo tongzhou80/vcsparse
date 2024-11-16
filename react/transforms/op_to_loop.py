@@ -6,14 +6,15 @@ class NameToSubscript(ast.NodeTransformer):
         self.indices_map = indices_map
 
     def visit_Name(self, node):
+        newnode = node
         if node.id in self.indices_map:
-            subscript = new_ast_subscript(
-                value=node,
-                indices=[new_ast_name(i) for i in self.indices_map[node.id]],
-            )
-            return subscript
-        else:
-            return node
+            if self.indices_map[node.id]:
+                subscript = new_ast_subscript(
+                    value=node,
+                    indices=[new_ast_name(i) for i in self.indices_map[node.id]],
+                )
+                newnode = subscript
+        return newnode
 
 class OpToLoop(ast.NodeTransformer):
     def __init__(self, trie_fuse=False):
@@ -39,9 +40,10 @@ class OpToLoop(ast.NodeTransformer):
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
             [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in indices],
+            [NameToSubscript(self.indices_map).visit(node)]
         )
-        new_assign = NameToSubscript(self.indices_map).visit(node)
-        dump_code(new_assign)
+        
+        #dump_code(new_assign)
         dump_code(loop)
         if not self.trie_fuse:
             pass
