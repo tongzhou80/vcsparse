@@ -55,14 +55,35 @@ class OpToLoop(ast.NodeTransformer):
 
         if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min']:
             axis = node.value.args[1].value
+            # Mark that loop level as reduction
             reduction_index = self.indices_map[node.use_vars[0]][axis]
             loop = MarkLoopAsReduction(reduction_index).visit(loop)
+            # Insert initialization at proper place
             initialization = new_ast_assign(
                 node.targets[0],
                 get_init_value_for_reduction(node.value.func.id)
             )
             loop = InsertInitialization(self.indices_map[node.def_vars[0]], initialization).visit(loop)
+            # Fix reduction assignment
+            loop = FixReductionAssign().visit(loop)
         return loop
+
+class FixReductionAssign(ast.NodeTransformer):
+    def visit_Assign(self, node):
+        if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min']:
+            if node.value.func.id == 'sum':
+                node.value = new_ast_add(
+                    deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
+                    node.value,
+                )
+            elif node.value.func.id in ['max', 'min']:
+                node.value = new_ast_call(
+                                new_ast_name(node.value.func.id),
+                                [deepcopy_ast_node(node.targets[0], ctx=ast.Load()), node.value],
+                            )
+            else:
+                assert False
+        return node
 
 class InsertInitialization(ast.NodeTransformer):
     def __init__(self, indices, initialization):
