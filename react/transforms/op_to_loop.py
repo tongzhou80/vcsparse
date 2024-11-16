@@ -59,6 +59,20 @@ class OpToLoop(ast.NodeTransformer):
             loop = MarkLoopAsReduction(reduction_index).visit(loop)
         return loop
 
+class InsertInitialization(ast.NodeTransformer):
+    def __init__(self, indices, initialization):
+        self.initialization = initialization
+        self.indices = indices
+
+    def visit_For(self, node):
+        if node.target.id in self.indices:
+            self.indices.remove(node.target.id)
+
+        if len(self.indices) == 0:
+            node.body.insert(0, self.initialization)
+        self.generic_visit(node)
+        return node
+
 class MarkLoopAsReduction(ast.NodeTransformer):
     def __init__(self, reduction_index):
         self.reduction_index = reduction_index
