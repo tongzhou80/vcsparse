@@ -5,6 +5,7 @@ class AttachIndexNotation(ast.NodeTransformer):
     def __init__(self):
         self.indices_map = {}
         self.index_range = {}
+        self.tensor_format = {}
 
     def visit_FunctionDef(self, node):
         #dump(node.args)
@@ -14,6 +15,10 @@ class AttachIndexNotation(ast.NodeTransformer):
             if hasattr(arg, 'annotation') and arg.annotation is not None:
                 index_str = arg.annotation.args[0].value
                 indices = index_str.split(',')
+                self.tensor_format[varname] = 'dense'
+                if len(arg.annotation.args) > 1:
+                    self.tensor_format[varname] = arg.annotation.args[1].value
+
             self.indices_map[varname] = indices
             for pos,index in enumerate(indices):
                 if index not in self.index_range:
