@@ -51,6 +51,7 @@ class OpToLoop(ast.NodeTransformer):
                 if i not in indices:
                     indices.append(i)
 
+        orig_node = deepcopy_ast_node(node)
         new_stmt = NameToSubscript(self.indices_map).visit(node)
         new_stmt = RemoveNoneAxis().visit(new_stmt)
         loop = new_ast_perfect_for(
@@ -58,6 +59,7 @@ class OpToLoop(ast.NodeTransformer):
             [new_ast_range(new_ast_node_from_str(self.get_index_bound(i))) for i in indices],
             [new_stmt]
         )
+        loop.orig_node = orig_node
 
         # is_reduction = False
         # if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
