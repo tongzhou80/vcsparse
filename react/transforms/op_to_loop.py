@@ -99,15 +99,24 @@ class RemoveNoneAxis(ast.NodeTransformer):
 class FixReductionAssign(ast.NodeTransformer):
     def visit_Assign(self, node):
         if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
-            if node.value.func.id in ['sum', 'matmul']:
+            if node.value.func.id  == 'sum':
                 node.value = new_ast_add(
                     deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
-                    node.value,
+                    node.value.args[0],
+                )
+            elif node.value.func.id == 'matmul':
+                node.value = new_ast_add(
+                    deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
+                    new_ast_mul(
+                        node.value.args[0],
+                        node.value.args[1],
+                    )
                 )
             elif node.value.func.id in ['max', 'min']:
                 node.value = new_ast_call(
                                 new_ast_name(node.value.func.id),
-                                [deepcopy_ast_node(node.targets[0], ctx=ast.Load()), node.value],
+                                [deepcopy_ast_node(node.targets[0], ctx=ast.Load()), 
+                                 node.value.args[0]],
                             )
             else:
                 assert False
