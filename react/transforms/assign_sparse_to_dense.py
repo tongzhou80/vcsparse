@@ -42,12 +42,15 @@ class ReplaceSparseOperands(ast.NodeTransformer):
                 # We need to make a dense temporary
                 # and assign the sparse operand to it
                 # and then replace the original operand with the temporary
+                node.sparse_format = self.tensor_format[node.id]
                 tmp = self.get_new_var()
+                new_assign = new_ast_assign(
+                    new_ast_name(tmp, ctx=ast.Store()),
+                    node
+                )
+                new_assign.sparse_info = (node.id, self.tensor_format[node.id])
                 self.new_stmts.append(
-                    new_ast_assign(
-                        new_ast_name(tmp, ctx=ast.Store()),
-                        node
-                    )
+                    new_assign
                 )
                 return new_ast_name(tmp)
 
