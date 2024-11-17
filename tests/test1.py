@@ -21,5 +21,5 @@ def f5(A: Index('i,k', 'csr')):
     return sum(A, 1)
 
 for f in [f0, f1, f2, f3, f4, f5]:
-    newcode = compile_from_src(inspect.getsource(f), trie_fuse=1, parallelize=0)
+    newcode = compile_from_src(inspect.getsource(f), trie_fuse=0, parallelize=0)
     print(newcode)

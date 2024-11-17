@@ -45,7 +45,7 @@ class ReplaceSparseOperands(ast.NodeTransformer):
                 tmp = self.get_new_var()
                 self.new_stmts.append(
                     new_ast_assign(
-                        new_ast_name(tmp),
+                        new_ast_name(tmp, ctx=ast.Store()),
                         node
                     )
                 )
