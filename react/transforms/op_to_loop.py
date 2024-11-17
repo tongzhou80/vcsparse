@@ -47,10 +47,12 @@ class OpToLoop(ast.NodeTransformer):
                 if i not in indices:
                     indices.append(i)
 
+        new_stmt = NameToSubscript(self.indices_map).visit(node)
+        new_stmt = RemoveNoneAxis().visit(new_stmt)
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
             [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in indices],
-            [NameToSubscript(self.indices_map).visit(node)]
+            [new_stmt]
         )
 
         # is_reduction = False
@@ -83,6 +85,17 @@ class OpToLoop(ast.NodeTransformer):
         else:
             return loop
 
+class RemoveNoneAxis(ast.NodeTransformer):
+    '''
+    This class removes code patterns such as 'a[:, None]' or 'a[None, :]'
+    '''
+    def visit_Subscript(self, node):
+        node_str = ast.unparse(node)
+        if node_str.endswith('[:, None]') or node_str.endswith('[None, :]'):
+            return node.value
+        else:
+            return node
+
 class FixReductionAssign(ast.NodeTransformer):
     def visit_Assign(self, node):
         if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
@@ -98,21 +111,6 @@ class FixReductionAssign(ast.NodeTransformer):
                             )
             else:
                 assert False
-        return node
-
-class InsertInitialization(ast.NodeTransformer):
-    def __init__(self, indices, initialization):
-        self.initialization = initialization
-        self.indices = indices.copy()
-
-    def visit_For(self, node):
-        if node.target.id in self.indices:
-            self.indices.remove(node.target.id)
-
-        if len(self.indices) == 0:
-            node.body.insert(0, self.initialization)
-        else:
-            self.generic_visit(node)
         return node
 
 class MarkLoopAsReduction(ast.NodeTransformer):
