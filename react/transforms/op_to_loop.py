@@ -53,25 +53,40 @@ class OpToLoop(ast.NodeTransformer):
             [NameToSubscript(self.indices_map).visit(node)]
         )
 
-        if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min']:
-            axis = node.value.args[1].value
+        # is_reduction = False
+        # if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
+        #     is_reduction = True
+
+        if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
+            if node.value.func.id == 'matmul':
+                reduction_index = self.indices_map[node.use_vars[0]][1]
+            else:
+                axis = node.value.args[1].value                
+                reduction_index = self.indices_map[node.use_vars[0]][axis]
             # Mark that loop level as reduction
-            reduction_index = self.indices_map[node.use_vars[0]][axis]
             loop = MarkLoopAsReduction(reduction_index).visit(loop)
             # Insert initialization at proper place
             initialization = new_ast_assign(
                 node.targets[0],
                 get_init_value_for_reduction(node.value.func.id)
             )
-            loop = InsertInitialization(self.indices_map[node.def_vars[0]], initialization).visit(loop)
+            initialization_indices = self.indices_map[node.def_vars[0]]
+            initialization_loop = new_ast_perfect_for(
+                [new_ast_name(i) for i in initialization_indices],
+                [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in initialization_indices],
+                [initialization]
+            )
+            #loop = InsertInitialization(self.indices_map[node.def_vars[0]], initialization).visit(loop)
             # Fix reduction assignment
             loop = FixReductionAssign().visit(loop)
-        return loop
+            return initialization_loop, loop
+        else:
+            return loop
 
 class FixReductionAssign(ast.NodeTransformer):
     def visit_Assign(self, node):
-        if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min']:
-            if node.value.func.id == 'sum':
+        if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
+            if node.value.func.id in ['sum', 'matmul']:
                 node.value = new_ast_add(
                     deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
                     node.value,

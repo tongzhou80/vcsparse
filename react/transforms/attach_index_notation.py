@@ -55,6 +55,8 @@ class AttachIndexNotation(ast.NodeTransformer):
                 full_indices = self.indices_map[node.args[0].id]
                 axis = node.args[1].value
                 node.indices = [full_indices[i] for i in range(len(full_indices)) if i != axis]
+            elif node.func.id == 'matmul':
+                node.indices = [self.indices_map[node.args[0].id][0], self.indices_map[node.args[1].id][1]]
         return node
 
     def visit_Assign(self, node):

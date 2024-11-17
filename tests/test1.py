@@ -14,7 +14,10 @@ def f3(A: Index('i,j')):
     b = sum(A, 1)
     return A / b[:, None]
 
+def f4(A: Index('i,k'), B: Index('k,j')):
+    return matmul(A, B)
 
-for f in [f0, f1, f2, f3]:
-    newcode = compile_from_src(inspect.getsource(f), trie_fuse=1, parallelize=1)
+
+for f in [f0, f1, f2, f3, f4]:
+    newcode = compile_from_src(inspect.getsource(f), trie_fuse=1, parallelize=0)
     print(newcode)
