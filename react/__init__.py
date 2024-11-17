@@ -1,6 +1,7 @@
 import ast
 from ast_transforms import apply_transform_on_ast
 from .transforms import attach_index_notation, op_to_loop, trie_fuse, insert_allocations, parallelize
+from .transforms import assign_sparse_to_dense
 
 def Index(*args):
     pass
@@ -8,6 +9,7 @@ def Index(*args):
 def compile_from_src(src, **options):
     tree = ast.parse(src)
     tree = apply_transform_on_ast(tree, "to_single_op_form")
+    tree = assign_sparse_to_dense.transform(tree)
     tree = apply_transform_on_ast(tree, "attach_def_use_vars")
     tree = attach_index_notation.transform(tree)
     tree = insert_allocations.transform(tree)

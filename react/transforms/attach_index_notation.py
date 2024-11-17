@@ -65,6 +65,11 @@ class AttachIndexNotation(ast.NodeTransformer):
                 node.indices = [self.indices_map[node.args[0].id][0], self.indices_map[node.args[1].id][1]]
         return node
 
+    def visit_Name(self, node):
+        if node.id in self.indices_map:
+            node.indices = self.indices_map[node.id]
+        return node
+
     def visit_Assign(self, node):
         target = node.targets[0]
         assert isinstance(target, ast.Name)

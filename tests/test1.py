@@ -17,8 +17,8 @@ def f3(A: Index('i,j')):
 def f4(A: Index('i,k'), B: Index('k,j')):
     return matmul(A, B)
 
-def f5(A: Index('i,k', 'csr'), B: Index('k,j')):
-    return matmul(A, B)
+def f5(A: Index('i,k', 'csr')):
+    return sum(A, 1)
 
 for f in [f0, f1, f2, f3, f4, f5]:
     newcode = compile_from_src(inspect.getsource(f), trie_fuse=1, parallelize=0)
