@@ -35,6 +35,10 @@ class OpToLoop(ast.NodeTransformer):
                 return loop
         return None
 
+    def get_index_bound(self, i):
+        rg = self.index_range[i]
+        return f'{rg[0]}.shape[{rg[1]}]'
+
     def visit_Assign(self, node):
         if isinstance(node.value, ast.Call) and node.value.func.id in ['empty', 'zeros', 'ones']:
             return node
@@ -51,7 +55,7 @@ class OpToLoop(ast.NodeTransformer):
         new_stmt = RemoveNoneAxis().visit(new_stmt)
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
-            [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in indices],
+            [new_ast_range(new_ast_node_from_str(self.get_index_bound(i))) for i in indices],
             [new_stmt]
         )
 
@@ -75,7 +79,7 @@ class OpToLoop(ast.NodeTransformer):
             initialization_indices = self.indices_map[node.def_vars[0]]
             initialization_loop = new_ast_perfect_for(
                 [new_ast_name(i) for i in initialization_indices],
-                [new_ast_range(new_ast_node_from_str(self.index_range[i])) for i in initialization_indices],
+                [new_ast_range(new_ast_node_from_str(self.get_index_bound(i))) for i in initialization_indices],
                 [initialization]
             )
             #loop = InsertInitialization(self.indices_map[node.def_vars[0]], initialization).visit(loop)

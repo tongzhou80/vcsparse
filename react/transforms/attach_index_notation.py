@@ -17,7 +17,8 @@ class AttachIndexNotation(ast.NodeTransformer):
             self.indices_map[varname] = indices
             for pos,index in enumerate(indices):
                 if index not in self.index_range:
-                    self.index_range[index] = f'{varname}.shape[{pos}]'
+                    #self.index_range[index] = f'{varname}.shape[{pos}]'
+                    self.index_range[index] = (varname, pos)
         node.indices_map = self.indices_map
         node.index_range = self.index_range
         self.generic_visit(node)

@@ -18,11 +18,12 @@ class InsertAllocations(ast.NodeTransformer):
         indices_map = node.indices_map
         index_range = node.index_range
         for v in visitor.defined_vars:
+            shape = [f"{index_range[i][0]}.shape[{index_range[i][1]}]" for i in indices_map[v]]
             alloc = new_ast_assign(
                 new_ast_name(v, ctx=ast.Store()),
                 new_ast_call(
                     new_ast_name('empty'),
-                    new_ast_node_from_str(f'({",".join([index_range[i] for i in indices_map[v]])})')
+                    new_ast_node_from_str(f'({",".join(shape)})')
                 )
             )
             alloc.targets[0].indices = indices_map[v]
