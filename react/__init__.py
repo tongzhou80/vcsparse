@@ -21,7 +21,7 @@ def compile(fn, **options):
         print(newsrc)
     m = ast_transforms.utils.load_code(newsrc)
     return getattr(m, fn.__name__)
-
+git 
 def compile_from_src(src, **options):
     tree = ast.parse(src)
     tree = apply_transform_on_ast(tree, "remove_func_decorator")
