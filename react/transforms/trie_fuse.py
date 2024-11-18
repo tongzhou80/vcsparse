@@ -14,27 +14,34 @@ class TrieFuse(ast.NodeTransformer):
 
         if len(loops) == 0:
             return
-        
-        host = None
-        # Make the first non-reduction loop host
-        for i,l in enumerate(loops):
-            if not hasattr(l, 'is_reduction'):
-                host = l
-                break
-
-        if host is None:
-            return
 
         loops_to_be_removed = []
-        for loop in loops[(i+1):]:  # starting from the (i+1)th loop
-            if host.target.id == loop.target.id:
-                host.body.extend(loop.body)
-                loops_to_be_removed.append(loop)
+        i = 0
+        while i < len(loops):
+            host = loops[i]
+            if hasattr(host, 'is_reduction'):
+                i += 1
+                continue
+            
+            fused_loops_count = 0
+            for loop in loops[(i+1):]:
+                if host.target.id == loop.target.id:
+                    host.body.extend(loop.body)
+                    loops_to_be_removed.append(loop)
+                    fused_loops_count += 1
+                else:
+                    break
+
+            i += fused_loops_count
+            i += 1
 
         for loop in loops_to_be_removed:
             node.body.remove(loop)
         
-        self.fuse_loops_in_body(host)
+        # Repeat the fusion process for the new loops
+        for child in node.body:
+            if isinstance(child, ast.For):
+                self.fuse_loops_in_body(child)
 
 def transform(node):
     return TrieFuse().visit(node)
