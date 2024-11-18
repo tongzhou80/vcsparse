@@ -62,9 +62,6 @@ class OpToLoop(ast.NodeTransformer):
         )
         loop.orig_node = orig_node
 
-        # is_reduction = False
-        # if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
-        #     is_reduction = True
 
         if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
             if node.value.func.id == 'matmul':
@@ -138,6 +135,7 @@ class MarkLoopAsReduction(ast.NodeTransformer):
             node.is_reduction = True
         self.generic_visit(node)
         return node
+
 
 def transform(node, trie_fuse=False):
     return OpToLoop(trie_fuse).visit(node)

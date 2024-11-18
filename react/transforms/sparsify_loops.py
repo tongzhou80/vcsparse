@@ -14,8 +14,8 @@ class ConvertDenseLoopToSparse(ast.NodeTransformer):
         outer_index = outer.target.id
         inner_index = inner.target.id
         inner.iter = new_ast_range(
-            stop=new_ast_node_from_str(f'{self.var}.inptr[{outer_index}+1]'),
-            start=new_ast_node_from_str(f'{self.var}.inptr[{outer_index}]'),
+            stop=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}+1]'),
+            start=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}]'),
         )
         new_inner_index = '_' + inner_index
         inner.target = new_ast_name(new_inner_index)
