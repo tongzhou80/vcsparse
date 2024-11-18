@@ -1,7 +1,7 @@
 import ast
 from ast_transforms import apply_transform_on_ast
 from .transforms import attach_index_notation, op_to_loop, trie_fuse, insert_allocations, parallelize
-from .transforms import assign_sparse_to_dense
+from .transforms import assign_sparse_to_dense, sparsify_loops
 
 def Index(*args):
     pass
@@ -14,6 +14,7 @@ def compile_from_src(src, **options):
     tree = attach_index_notation.transform(tree)
     tree = insert_allocations.transform(tree)
     tree = op_to_loop.transform(tree)
+    tree = sparsify_loops.transform(tree)
     if options.get("trie_fuse", False):
         tree = trie_fuse.transform(tree)
     if options.get("parallelize", False):
