@@ -10,13 +10,15 @@ from .transforms import assign_sparse_to_dense, sparsify_loops
 def Index(*args):
     pass
 
-def compile(fn):
-    newsrc = compile_from_src(inspect.getsource(fn), trie_fuse=1)
+def compile(fn, **options):
+    newsrc = compile_from_src(inspect.getsource(fn), **options)
     header = textwrap.dedent('''
     import numba
     from numpy import empty, zeros
     ''')
     newsrc = header + newsrc
+    if options.get("dump_code", False):
+        print(newsrc)
     m = ast_transforms.utils.load_code(newsrc)
     return getattr(m, fn.__name__)
 
