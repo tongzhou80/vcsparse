@@ -35,9 +35,8 @@ class OpToLoop(ast.NodeTransformer):
                 return loop
         return None
 
-    def get_index_bound(self, i):
-        rg = self.index_range[i]
-        return f'{rg[0]}.shape[{rg[1]}]'
+    def get_bound(self, t):
+        return f'{t[0]}.shape[{t[1]}]'
 
     def visit_Assign(self, node):
         if isinstance(node.value, ast.Call) and node.value.func.id in ['empty', 'zeros', 'ones']:
@@ -46,17 +45,19 @@ class OpToLoop(ast.NodeTransformer):
         assert isinstance(target, ast.Name)
 
         indices = []
-        for v in node.def_vars + node.use_vars:            
-            for i in self.indices_map[v]:
-                if i not in indices:
-                    indices.append(i)
+        index_range = {}
+        for v in node.use_vars + node.def_vars: 
+            for pos,idx in enumerate(self.indices_map[v]):
+                if idx not in indices:
+                    indices.append(idx)
+                    index_range[idx] = (v, pos)
 
         orig_node = deepcopy_ast_node(node)
         new_stmt = NameToSubscript(self.indices_map).visit(node)
         new_stmt = RemoveNoneAxis().visit(new_stmt)
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
-            [new_ast_range(new_ast_node_from_str(self.get_index_bound(i))) for i in indices],
+            [new_ast_range(new_ast_node_from_str(f'{self.get_bound(index_range[i])}')) for i in indices],
             [new_stmt]
         )
         loop.orig_node = orig_node
@@ -81,7 +82,7 @@ class OpToLoop(ast.NodeTransformer):
             initialization_indices = self.indices_map[node.def_vars[0]]
             initialization_loop = new_ast_perfect_for(
                 [new_ast_name(i) for i in initialization_indices],
-                [new_ast_range(new_ast_node_from_str(self.get_index_bound(i))) for i in initialization_indices],
+                [new_ast_range(new_ast_node_from_str(self.get_bound(index_range[i]))) for i in initialization_indices],
                 [initialization]
             )
             #loop = InsertInitialization(self.indices_map[node.def_vars[0]], initialization).visit(loop)

@@ -15,16 +15,25 @@ class AssignSparseToDense(ast.NodeTransformer):
                 if len(arg.annotation.args) > 1:
                     self.tensor_format[varname] = arg.annotation.args[1].value
         self.generic_visit(node)
+
+        for tensor, format in self.tensor_format.items():
+            if format in ('csr', 'csc'):
+                new_assign = new_ast_assign(
+                    new_ast_name('_'+tensor, ctx=ast.Store()),
+                    new_ast_name(tensor)
+                )
+                new_assign.sparse_info = (tensor, format)
+                node.body.insert(0, new_assign)
         return node
 
-    def visit_Assign(self, node):
-        '''
-        Check if the assignment uses any operand that is sparse, and seperate it out 
-        to a new assignment if so.
-        '''
-        visitor = ReplaceSparseOperands(self.tensor_format)
-        visitor.visit(node)
-        return visitor.new_stmts + [node]
+    # def visit_Assign(self, node):
+    #     '''
+    #     Check if the assignment uses any operand that is sparse, and seperate it out 
+    #     to a new assignment if so.
+    #     '''
+    #     visitor = ReplaceSparseOperands(self.tensor_format)
+    #     visitor.visit(node)
+    #     return visitor.new_stmts + [node]
         
 class ReplaceSparseOperands(ast.NodeTransformer):
     def __init__(self, tensor_format):
