@@ -28,11 +28,52 @@ class GenNumbaCode(ast.NodeTransformer):
                 if len(arg.annotation.args) > 1:
                     sparse_tensors[varname] = arg.annotation.args[1].value
 
-        if len(sparse_tensors) == 0:
-            node.decorator_list.append(new_ast_node_from_str(f"numba.njit(parallel={self.parallel})"))
-        else:
-            assert False, "Not implemented yet"
-        return node
+        node.decorator_list.append(new_ast_node_from_str(f"numba.njit(parallel={self.parallel})"))
+        if len(sparse_tensors) > 0:
+            # Create an outer function that launches the inner function (node)
+            outer_func = new_ast_function_def(
+                name=node.name,
+                args=deepcopy_ast_node(node.args),
+                body=[]
+            )
+            node.name = f"_{node.name}"
+            orig_args = deepcopy_ast_node(node.args)
+            # Update the arguments of the inner function (node) such that every sparse tensor is replaced
+            # by 3 dense arrays, e.g. indptr, indices and data
+            newargs = []
+            for arg in orig_args.args:
+                varname = arg.arg
+                if varname in sparse_tensors:
+                    newargs.append(new_ast_arg(f"{varname}_indptr"))
+                    newargs.append(new_ast_arg(f"{varname}_indices"))
+                    newargs.append(new_ast_arg(f"{varname}_data"))
+                else:
+                    newargs.append(arg)
+            node.args.args = newargs
+            # Add a call statement in outer_func to call the inner function with the dense arrays
+            actual_args = []
+            for arg in orig_args.args:
+                varname = arg.arg
+                if varname in sparse_tensors:
+                    actual_args.append(new_ast_name(f"{varname}.indptr"))
+                    actual_args.append(new_ast_name(f"{varname}.indices"))
+                    actual_args.append(new_ast_name(f"{varname}.data"))
+                else:
+                    actual_args.append(arg)
+            
+            outer_func.body.append(
+                new_ast_return(
+                    new_ast_call(
+                        new_ast_name(node.name),
+                        actual_args
+                    )
+                )
+            )
+
+            #dump_code(node)
+            #dump_code(outer_func)
+            #assert False, "Unimplemented"
+        return node, outer_func
 
 def transform(tree, *args):
     return GenNumbaCode(*args).visit(tree)
