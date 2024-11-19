@@ -19,6 +19,7 @@ class GenNumbaCode(ast.NodeTransformer):
         contains the actual function body
         '''
         sparse_tensors = {}
+        indices_map = {}
         for arg in node.args.args:
             varname = arg.arg
             indices = []
@@ -27,6 +28,7 @@ class GenNumbaCode(ast.NodeTransformer):
                 indices = index_str.split(',')
                 if len(arg.annotation.args) > 1:
                     sparse_tensors[varname] = arg.annotation.args[1].value
+            indices_map[varname] = indices
 
         node.decorator_list.append(new_ast_node_from_str(f"numba.njit(parallel={self.parallel})"))
         if len(sparse_tensors) > 0:
@@ -47,6 +49,7 @@ class GenNumbaCode(ast.NodeTransformer):
                     newargs.append(new_ast_arg(f"{varname}_indptr"))
                     newargs.append(new_ast_arg(f"{varname}_indices"))
                     newargs.append(new_ast_arg(f"{varname}_data"))
+                    newargs.append(new_ast_arg(f"{varname}_shape"))
                 else:
                     newargs.append(arg)
             node.args.args = newargs
@@ -58,6 +61,7 @@ class GenNumbaCode(ast.NodeTransformer):
                     actual_args.append(new_ast_name(f"{varname}.indptr"))
                     actual_args.append(new_ast_name(f"{varname}.indices"))
                     actual_args.append(new_ast_name(f"{varname}.data"))
+                    actual_args.append(new_ast_name(f"{varname}.shape"))
                 else:
                     actual_args.append(arg)
             
