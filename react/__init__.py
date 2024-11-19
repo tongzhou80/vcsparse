@@ -37,7 +37,7 @@ def compile_from_src(src, **options):
     tree = sparsify_loops.transform(tree)
     if options.get("trie_fuse", False):
         tree = trie_fuse.transform(tree)
-    if options.get("use_numba", False):
+    if options.get("gen_numba_code", False):
         if options.get("parallelize", False):
             tree = parallelize.transform(tree)
             tree = apply_transform_on_ast(tree, "add_func_decorator", "numba.njit(parallel=True)")
