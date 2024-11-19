@@ -10,6 +10,9 @@ from .transforms import assign_sparse_to_dense, sparsify_loops
 def Index(*args):
     pass
 
+def Tensor(*args):
+    pass
+
 def compile(fn, **options):
     newsrc = compile_from_src(inspect.getsource(fn), **options)
     header = textwrap.dedent('''

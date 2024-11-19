@@ -4,7 +4,7 @@ import timeit
 from react import *
 
 #@compile(dump_code=True)
-def kernel_react(A: Index('i,j', 'csr'), B: Index('i,j', 'csr')):
+def kernel_react(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
     return A + B
 
 kernel_react = compile(kernel_react, dump_code=True, trie_fuse=True)
