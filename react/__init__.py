@@ -6,6 +6,7 @@ import ast_transforms
 from ast_transforms import apply_transform_on_ast
 from .transforms import attach_index_notation, op_to_loop, trie_fuse, insert_allocations, parallelize
 from .transforms import assign_sparse_to_dense, sparsify_loops, gen_numba_code, intraloop_scalar_replacement
+from .transforms import remove_unused_array_stores
 
 def Index(*args):
     pass
@@ -43,7 +44,7 @@ def compile_from_src(src, **options):
         tree = gen_numba_code.transform(tree, options.get("parallelize", False))
     if options.get("memory_opt", False):
         tree = intraloop_scalar_replacement.transform(tree)
-        
+        tree = remove_unused_array_stores.transform(tree)
     tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
     tree = apply_transform_on_ast(tree, "where_to_ternary")
     return ast_to_code(tree)
