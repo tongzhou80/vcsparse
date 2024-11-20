@@ -17,7 +17,9 @@ class AttachIndexNotation(ast.NodeTransformer):
                 indices = index_str.split(',')
                 self.tensor_format[varname] = 'dense'
                 if len(arg.annotation.args) > 1:
-                    self.tensor_format[varname] = arg.annotation.args[1].value
+                    format = arg.annotation.args[1].value
+                    assert format in ('dense', 'csr'), "Only dense and csr format are supported for now!"
+                    self.tensor_format[varname] = format
 
             self.indices_map[varname] = indices
             for pos,index in enumerate(indices):
