@@ -28,11 +28,9 @@ def kernel_py(A, B):
     return (A + B).toarray()
 
 
-n = 100
-A = sp.random(n, n, density=0.1, format='csr')
-B = sp.random(n, n, density=0.1, format='csr')
-
-print(type(kernel_py(A, B)), type(kernel_react(A, B)))
+n = 4000
+A = sp.random(n, n, density=0.01, format='csr')
+B = sp.random(n, n, density=0.01, format='csr')
 
 print(np.allclose(kernel_py(A, B), kernel_react(A, B)))
 
