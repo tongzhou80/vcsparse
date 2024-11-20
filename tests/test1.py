@@ -25,5 +25,5 @@ def f6(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
     return A + B
 
 for f in [f0, f1, f2, f3, f4, f5, f6]:
-    newcode = compile_from_src(inspect.getsource(f), trie_fuse=0, parallelize=0)
+    newcode = compile_from_src(inspect.getsource(f), trie_fuse=1, parallelize=1, gen_numba_code=True)
     print(newcode)

@@ -4,7 +4,10 @@ from ast_transforms.utils import *
 
 class GenNumbaCode(ast.NodeTransformer):
     def __init__(self, parallel=False):
-        self.parallel = parallel
+        if parallel:
+            self.parallel = True
+        else:
+            self.parallel = False
         self.tensor_format = {}
 
     '''
@@ -80,7 +83,9 @@ class GenNumbaCode(ast.NodeTransformer):
             #dump_code(node)
             #dump_code(outer_func)
             #assert False, "Unimplemented"
-        return node, outer_func
+            return node, outer_func
+        else:
+            return node
 
 class RewriteAttributeWithName(ast.NodeTransformer):
     def __init__(self, sparse_tensors):
