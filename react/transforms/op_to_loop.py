@@ -12,6 +12,7 @@ class NameToSubscript(ast.NodeTransformer):
                 subscript = new_ast_subscript(
                     value=node,
                     indices=[new_ast_name(i) for i in self.indices_map[node.id]],
+                    ctx=node.ctx
                 )
                 newnode = subscript
         return newnode
