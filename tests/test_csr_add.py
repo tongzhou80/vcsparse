@@ -7,7 +7,7 @@ from react import *
 def kernel_react(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
     return A + B
 
-kernel_react = compile(kernel_react, dump_code=True, trie_fuse=False, gen_numba_code=True)
+kernel_react = compile(kernel_react, dump_code=True, trie_fuse=1, gen_numba_code=True, parallelize=True)
 # import numba
 # from numpy import empty, zeros
 # def kernel_react(A, B):

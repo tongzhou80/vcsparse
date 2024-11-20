@@ -23,6 +23,7 @@ class ConvertDenseLoopToSparse(ast.NodeTransformer):
             new_ast_name(inner_index, ctx=ast.Store()),
             new_ast_node_from_str(f'{self.var}.indices[{new_inner_index}]')
         ))
+        inner.is_sparse = True
         RewriteSparseTensorRead(self.var, new_inner_index).visit(inner)
         return node
 

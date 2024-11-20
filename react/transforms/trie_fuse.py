@@ -26,6 +26,8 @@ class TrieFuse(ast.NodeTransformer):
             fused_loops_count = 0
             for loop in loops[(i+1):]:
                 if host.target.id == loop.target.id:
+                    if hasattr(loop, 'is_sparse') or hasattr(host, 'is_sparse'):
+                        break
                     host.body.extend(loop.body)
                     loops_to_be_removed.append(loop)
                     fused_loops_count += 1

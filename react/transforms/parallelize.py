@@ -8,7 +8,7 @@ class Parallelize(ast.NodeTransformer):
                 if not hasattr(child, 'is_reduction'):
                     old_range = child.iter
                     child.iter = new_ast_call(
-                        new_ast_name('prange'),
+                        new_ast_attribute(new_ast_name('numba'), 'prange'),
                         old_range.args,
                     )
 
