@@ -27,7 +27,7 @@ kernel_react = compile(kernel_react, dump_code=True, trie_fuse=1, gen_numba_code
 def kernel_py(A, B):
     return (A + B).toarray()
 
-n = 3000
+n = 4000
 A = sp.random(n, n, density=0.01, format='csr')
 B = sp.random(n, n, density=0.01, format='csr')
 

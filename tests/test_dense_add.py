@@ -3,14 +3,14 @@ import timeit
 from react import *
 
 def kernel_react(A: Tensor('i,j'), B: Tensor('i,j')):
-    return A + B + 1
+    return A + B
 
 kernel_react = compile(kernel_react, dump_code=True, trie_fuse=True, gen_numba_code=True, parallelize=True, memory_opt=True)
 
 def kernel_py(A, B):
-    return A + B + 1
+    return A + B
 
-n = 6000
+n = 8000
 A = np.random.random((n, n))
 B = np.random.random((n, n))
 
