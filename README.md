@@ -1,1 +1,1 @@
-ReACT is a set of code generation techniques that 
+ReACT is a set of compiler techniques that generate optimized code for dense and sparse tensor expressions. Check out our paper: [ReACT: Redundancy-Aware Code Generation for Tensor Expressions](https://dl.acm.org/doi/pdf/10.1145/3559009.3569685).
