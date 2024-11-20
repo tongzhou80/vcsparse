@@ -41,7 +41,8 @@ def compile_from_src(src, **options):
         if options.get("parallelize", False):
             tree = parallelize.transform(tree)
         tree = gen_numba_code.transform(tree, options.get("parallelize", False))
-
+    if options.get("memory_opt", False):
+        tree = apply_transform_on_ast(tree, "intraloop_scalar_replacement")
     tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
     tree = apply_transform_on_ast(tree, "where_to_ternary")
     return ast_to_code(tree)
