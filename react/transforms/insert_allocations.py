@@ -20,8 +20,6 @@ class InsertAllocations(ast.NodeTransformer):
         for v in visitor.defined_vars:
             shape = [f"{index_range[i][0]}.shape[{index_range[i][1]}]" for i in indices_map[v]]
             alloc_func = 'empty'
-            if v.startswith('__d'):
-                alloc_func = 'zeros'
             alloc = new_ast_assign(
                 new_ast_name(v, ctx=ast.Store()),
                 new_ast_call(
