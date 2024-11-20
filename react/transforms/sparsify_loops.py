@@ -17,13 +17,13 @@ class ConvertDenseLoopToSparse(ast.NodeTransformer):
             stop=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}+1]'),
             start=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}]'),
         )
-        new_inner_index = '_' + inner_index
+        #new_inner_index = '_' + inner_index
+        new_inner_index = f'__p{self.var}_{outer_index}'
         inner.target = new_ast_name(new_inner_index)
         inner.body.insert(0, new_ast_assign(
             new_ast_name(inner_index, ctx=ast.Store()),
             new_ast_node_from_str(f'{self.var}.indices[{new_inner_index}]')
         ))
-        inner.is_sparse = True
         RewriteSparseTensorRead(self.var, new_inner_index).visit(inner)
         return node
 
