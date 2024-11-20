@@ -1,6 +1,7 @@
 import ast
 from ast_transforms.utils import *
 
+
 class GenNumbaCode(ast.NodeTransformer):
     def __init__(self, parallel=False):
         self.parallel = parallel
@@ -74,10 +75,23 @@ class GenNumbaCode(ast.NodeTransformer):
                 )
             )
 
+            node = RewriteAttributeWithName(sparse_tensors).visit(node)
+
             #dump_code(node)
             #dump_code(outer_func)
             #assert False, "Unimplemented"
         return node, outer_func
+
+class RewriteAttributeWithName(ast.NodeTransformer):
+    def __init__(self, sparse_tensors):
+        self.sparse_tensors = sparse_tensors
+
+    def visit_Attribute(self, node):
+        if isinstance(node.value, ast.Name) and node.value.id in self.sparse_tensors:
+            return new_ast_name(f"{node.value.id}_{node.attr}")
+        return node
+        #if node.attr in self.sparse_tensors:
+            
 
 def transform(tree, *args):
     return GenNumbaCode(*args).visit(tree)

@@ -1,5 +1,6 @@
 import ast
 from ast_transforms.utils import *
+from ast_transforms import apply_transform_on_ast
 
 class AssignSparseToDense(ast.NodeTransformer):
     def visit_FunctionDef(self, node):
@@ -23,6 +24,9 @@ class AssignSparseToDense(ast.NodeTransformer):
                     new_ast_name(tensor)
                 )
                 new_assign.sparse_info = (tensor, format)
+
+                for child in node.body:
+                    apply_transform_on_ast(child, 'replace_name', tensor, '_' + tensor)
                 node.body.insert(0, new_assign)
         return node
 

@@ -7,7 +7,7 @@ from react import *
 def kernel_react(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
     return A + B
 
-kernel_react = compile(kernel_react, dump_code=True, trie_fuse=True, gen_numba_code=True)
+kernel_react = compile(kernel_react, dump_code=True, trie_fuse=False, gen_numba_code=True)
 # import numba
 # from numpy import empty, zeros
 # def kernel_react(A, B):
@@ -25,12 +25,14 @@ kernel_react = compile(kernel_react, dump_code=True, trie_fuse=True, gen_numba_c
 #     return __ret
 
 def kernel_py(A, B):
-    return (A + B).todense()
+    return (A + B).toarray()
 
 
 n = 100
 A = sp.random(n, n, density=0.1, format='csr')
 B = sp.random(n, n, density=0.1, format='csr')
+
+print(type(kernel_py(A, B)), type(kernel_react(A, B)))
 
 print(np.allclose(kernel_py(A, B), kernel_react(A, B)))
 
