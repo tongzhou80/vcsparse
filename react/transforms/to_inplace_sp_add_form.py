@@ -78,7 +78,11 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
                     new_var = '__d' + node.value.right.id
                     new_stmt = new_ast_assign(
                         new_ast_name(new_var, ctx=ast.Store()),
-                        new_ast_name(node.value.right.id)
+                        new_ast_mul(
+                            new_ast_name(node.value.right.id),
+                            new_ast_const(1)
+                        )
+                        
                     )
                     new_stmts.append(new_stmt)
                     node.value.right = new_ast_name(new_var)
@@ -87,7 +91,10 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
                 new_var = '__d' + node.value.args[1].id
                 new_stmt = new_ast_assign(
                     new_ast_name(new_var, ctx=ast.Store()),
-                    new_ast_name(node.value.args[1].id)
+                    new_ast_mul(
+                        new_ast_name(node.value.args[1].id),
+                        new_ast_const(1)
+                    )
                 )
                 new_stmts.append(new_stmt)
                 node.value.args[1] = new_ast_name(new_var)
