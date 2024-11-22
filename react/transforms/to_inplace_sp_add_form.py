@@ -44,6 +44,32 @@ class ToSparseInplaceAddForm(ast.NodeTransformer):
     '''
     pass
 
+class MakeLeftSparse(ast.NodeTransformer):
+    def __init__(self):
+        self.sparse_tensors = {}
+
+    def visit_FunctionDef(self, node):
+        for arg in node.args.args:
+            varname = arg.arg
+            indices = []
+            if hasattr(arg, 'annotation') and arg.annotation is not None:
+                index_str = arg.annotation.args[0].value
+                indices = index_str.split(',')
+                if len(arg.annotation.args) > 1:
+                    format = arg.annotation.args[1].value
+                    assert format in ('dense', 'csr'), "Only dense and csr format are supported for now!"
+                    self.sparse_tensors[varname] = format
+        self.generic_visit(node)
+        return node
+
+    def visit_Assign(self, node):
+        if isinstance(node.value, ast.BinOp):
+            # If the left operand is dense and the right operand is sparse, swap them
+            if isinstance(node.value.left, ast.Name) and isinstance(node.value.right, ast.Name):
+                if node.value.left.id not in self.sparse_tensors and node.value.right.id in self.sparse_tensors:
+                    node.value.left, node.value.right = node.value.right, node.value.left
+        return node
+
 class ConvertToInplaceSpAddForm(ast.NodeTransformer):
     def __init__(self):
         self.sparse_tensors = {}
@@ -103,6 +129,6 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
         return new_stmts + [node]
 
 def transform(node):
-    transformer = ConvertToInplaceSpAddForm()
-    node = transformer.visit(node)
+    node = MakeLeftSparse().visit(node)
+    node = ConvertToInplaceSpAddForm().visit(node)
     return node
