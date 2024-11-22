@@ -13,18 +13,11 @@ class ConvertDenseLoopToSparse(ast.NodeTransformer):
         inner = node.body[0]
         outer_index = outer.target.id
         inner_index = inner.target.id
-        # # Create a new dense inner loop to initialize the dense buffer with 0s
-        # dense_init_loop = deepcopy_ast_node(inner)
-        # for child in dense_init_loop.body:
-        #     if isinstance(child, ast.Assign):
-        #         child.value = new_ast_const(0)
-        # node.body.insert(0, dense_init_loop)
         # Make the original inner loop have sparse iteration space
         inner.iter = new_ast_range(
             stop=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}+1]'),
             start=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}]'),
         )
-        #new_inner_index = '_' + inner_index
         new_inner_index = f'__p{self.var}_{outer_index}'
         inner.target = new_ast_name(new_inner_index)
         inner.body.insert(0, new_ast_assign(
