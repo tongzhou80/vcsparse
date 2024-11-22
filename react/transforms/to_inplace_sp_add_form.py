@@ -65,9 +65,8 @@ class MakeLeftSparse(ast.NodeTransformer):
     def visit_Assign(self, node):
         if isinstance(node.value, ast.BinOp):
             # If the left operand is dense and the right operand is sparse, swap them
-            if isinstance(node.value.left, ast.Name) and isinstance(node.value.right, ast.Name):
-                if node.value.left.id not in self.sparse_tensors and node.value.right.id in self.sparse_tensors:
-                    node.value.left, node.value.right = node.value.right, node.value.left
+            if isinstance(node.value.right, ast.Name) and node.value.right.id in self.sparse_tensors:
+                node.value.left, node.value.right = node.value.right, node.value.left
         return node
 
 class ConvertToInplaceSpAddForm(ast.NodeTransformer):

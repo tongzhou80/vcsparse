@@ -11,8 +11,8 @@ def f1(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr'), C: Tensor('i,j', 'csr')
     # add three sparse
     return A + B + C
 
-f0 = compile(f0, dump_code=True, trie_fuse=True, gen_numba_code=True, parallelize=True)
-f1 = compile(f1, dump_code=True, trie_fuse=True, gen_numba_code=True, parallelize=True)
+f0 = compile(f0, dump_code=True, trie_fuse=True, gen_numba_code=True, parallelize=True, memory_opt=True)
+f1 = compile(f1, dump_code=True, trie_fuse=True, gen_numba_code=True, parallelize=True, memory_opt=True)
 
 for N in [1000, 4000]:
     A = sp.random(N, N, density=0.01, format='csr')
