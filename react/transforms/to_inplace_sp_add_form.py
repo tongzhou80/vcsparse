@@ -46,7 +46,7 @@ class ToSparseInplaceAddForm(ast.NodeTransformer):
 
 class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
     def __init__(self):
-        self.tensor_format = {}
+        self.sparse_tensors = {}
 
     def visit_FunctionDef(self, node):
         for arg in node.args.args:
@@ -55,11 +55,10 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
             if hasattr(arg, 'annotation') and arg.annotation is not None:
                 index_str = arg.annotation.args[0].value
                 indices = index_str.split(',')
-                self.tensor_format[varname] = 'dense'
                 if len(arg.annotation.args) > 1:
                     format = arg.annotation.args[1].value
                     assert format in ('dense', 'csr'), "Only dense and csr format are supported for now!"
-                    self.tensor_format[varname] = format
+                    self.sparse_tensors[varname] = format
         self.generic_visit(node)
         return node
 
@@ -69,12 +68,11 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
         # C = spA * spB  => dB = spB * 1; C = spA * dB
         # C = spA + spB  => dB = spB * 1; C = spA + dB
         # C = spA @ spB  => dB = spB * 1; C = spA @ dB
-        # Note that "@" is the form of a call "matmul"
-        formats = self.tensor_format
+        # Note that "@" is the form of a call "matmul"        
         new_stmts = []
         if isinstance(node.value, ast.BinOp):
             if isinstance(node.value.left, ast.Name) and isinstance(node.value.right, ast.Name):
-                if formats[node.value.left.id] == 'csr' and formats[node.value.right.id] == 'csr':
+                if node.value.left.id in self.sparse_tensors and node.value.right.id in self.sparse_tensors:
                     new_var = '__d' + node.value.right.id
                     new_stmt = new_ast_assign(
                         new_ast_name(new_var, ctx=ast.Store()),
@@ -87,7 +85,7 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
                     new_stmts.append(new_stmt)
                     node.value.right = new_ast_name(new_var)
         elif isinstance(node.value, ast.Call) and node.value.func.id == 'matmul':
-            if formats[node.value.args[0].id] == 'csr' and formats[node.value.args[1].id] == 'csr':
+            if node.value.args[0].id in self.sparse_tensors and node.value.args[1].id in self.sparse_tensors:
                 new_var = '__d' + node.value.args[1].id
                 new_stmt = new_ast_assign(
                     new_ast_name(new_var, ctx=ast.Store()),
@@ -100,6 +98,50 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
                 node.value.args[1] = new_ast_name(new_var)
         return new_stmts + [node]
 
+class ConvertToInplaceSpAddForm(ast.NodeTransformer):
+    def __init__(self, sparse_tensors):
+        self.sparse_tensors = sparse_tensors
+
+    def visit_Assign(self, node):
+        '''
+        Convert a binary operation to a form that uses in-place update.
+        Examples:
+        C = spA + dB   => C = dB; C = C + spA
+        C = spA * dB   => C = 0; C = C + spA * dB
+        '''
+        new_stmts = []
+        if isinstance(node.value, ast.BinOp):
+            if isinstance(node.value.left, ast.Name) and node.value.left.id in self.sparse_tensors:
+                # Some sanity check
+                assert isinstance(node.value.right, (ast.Name, ast.Constant))
+                if isinstance(node.value.right, ast.Name):
+                    assert not node.value.right.id in self.sparse_tensors
+
+                if isinstance(node.value.op, (ast.Add)):                    
+                    new_assign = new_ast_assign(
+                        deepcopy_ast_node(node.targets[0], ctx=ast.Store()),
+                        deepcopy_ast_node(node.value.right)
+                    )
+                    new_stmts.append(new_assign)
+                    node.value = new_ast_add(
+                        deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
+                        node.value.left
+                    )
+                elif isinstance(node.value.op, (ast.Mult, ast.Div)):
+                    new_assign = new_ast_assign(
+                        deepcopy_ast_node(node.targets[0], ctx=ast.Store()),
+                        new_ast_const(0)
+                    )
+                    new_stmts.append(new_assign)
+                    node.value = new_ast_add(
+                        deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
+                        deepcopy_ast_node(node.value)
+                    )
+        return new_stmts + [node]
+
 def transform(node):
-    node = ConvertTwoSparseOperandStatements().visit(node)
+    visitor1 = ConvertTwoSparseOperandStatements()
+    node = visitor1.visit(node)
+    visitor2 = ConvertToInplaceSpAddForm(visitor1.sparse_tensors)
+    node = visitor2.visit(node)
     return node
