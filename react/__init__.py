@@ -7,6 +7,7 @@ from ast_transforms import apply_transform_on_ast
 from .transforms import attach_index_notation, op_to_loop, trie_fuse, insert_allocations, parallelize
 from .transforms import assign_sparse_to_dense, sparsify_loops, gen_numba_code, intraloop_scalar_replacement
 from .transforms import remove_unused_array_stores, to_single_sparse_operand_form, to_inplace_sp_add_form
+from .transforms import convert_matmul_op_to_call
 
 def Index(*args):
     pass
@@ -30,6 +31,7 @@ def compile_from_src(src, **options):
     tree = ast.parse(src)
     tree = apply_transform_on_ast(tree, "check_for_undefined", ["Tensor"])
     tree = apply_transform_on_ast(tree, "remove_func_decorator")
+    tree = convert_matmul_op_to_call.transform(tree)
     tree = apply_transform_on_ast(tree, "to_single_op_form")
     if options.get("to_dense_first", False):
         tree = assign_sparse_to_dense.transform(tree)
