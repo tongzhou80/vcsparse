@@ -28,6 +28,7 @@ def compile(fn, **options):
 
 def compile_from_src(src, **options):
     tree = ast.parse(src)
+    tree = apply_transform_on_ast(tree, "check_for_undefined", ["Tensor"])
     tree = apply_transform_on_ast(tree, "remove_func_decorator")
     tree = apply_transform_on_ast(tree, "to_single_op_form")
     
@@ -35,6 +36,7 @@ def compile_from_src(src, **options):
         tree = assign_sparse_to_dense.transform(tree)
     else:
         tree = to_single_sparse_operand_form.transform(tree)
+    #return ast_to_code(tree)
     tree = attach_index_notation.transform(tree)
 
     if not options.get("to_dense_first", False):

@@ -22,10 +22,10 @@ def f5(A: Tensor('i,k', 'csr')):
     return A / b[:, None]
 
 def f6(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
-    return A * B
+    return A * B * C
 
 for f in [f6]:
     newcode = compile_from_src(inspect.getsource(f), 
                             trie_fuse=1, parallelize=1, gen_numba_code=True, 
-                            memory_opt=0, to_dense_first=True)
+                            memory_opt=0, to_dense_first=0)
     print(newcode)
