@@ -20,15 +20,24 @@ class AssignSparseToDense(ast.NodeTransformer):
         for tensor, format in self.tensor_format.items():
             if format in ('csr', 'csc'):
                 new_var = '__d' + tensor
-                new_assign = new_ast_assign(
+                new_assign1 = new_ast_assign(
                     new_ast_name(new_var, ctx=ast.Store()),
-                    new_ast_name(tensor)
+                    new_ast_const(0)
                 )
-                new_assign.sparse_info = (tensor, format)
+                new_assign2 = new_ast_assign(
+                    new_ast_name(new_var, ctx=ast.Store()),
+                    new_ast_add(
+                        new_ast_name(new_var),
+                        new_ast_name(tensor)
+                    )
+                )
+                new_assign2.sparse_info = (tensor, format)
 
                 for child in node.body:
+                    print(child)
                     apply_transform_on_ast(child, 'replace_name', tensor, new_var)
-                node.body.insert(0, new_assign)
+                node.body.insert(0, new_assign2)
+                node.body.insert(0, new_assign1)
         return node
 
     # def visit_Assign(self, node):
