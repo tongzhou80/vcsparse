@@ -37,15 +37,10 @@ class AttachIndexNotation(ast.NodeTransformer):
             node.indices = []
             for operand in [node.left, node.right]:
                 if len(operand.indices) > len(node.indices):
-                    node.indices = operand.indices
-                # if isinstance(operand, ast.Name):
-                #     if len(self.indices_map[operand.id]) > len(node.indices):
-                #         node.indices = self.indices_map[operand.id]
+                    node.indices = operand.indices                
         elif isinstance(node.op, ast.MatMult):
             assert isinstance(node.left, ast.Name) and isinstance(node.right, ast.Name)
-            node.indices = [node.left.indices[0], node.right.indices[1]]
-            # a, b = node.left.id, node.right.id
-            # node.indices = [self.indices_map[a][0], self.indices_map[b][1]]
+            node.indices = [node.left.indices[0], node.right.indices[1]]            
         elif isinstance(node.op, ast.Pow):
             assert isinstance(node.left, ast.Name)
             node.indices = node.left.indices
