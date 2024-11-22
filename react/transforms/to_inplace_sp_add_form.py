@@ -44,7 +44,7 @@ class ToSparseInplaceAddForm(ast.NodeTransformer):
     '''
     pass
 
-class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
+class ConvertToInplaceSpAddForm(ast.NodeTransformer):
     def __init__(self):
         self.sparse_tensors = {}
 
@@ -63,46 +63,6 @@ class ConvertTwoSparseOperandStatements(ast.NodeTransformer):
         return node
 
     def visit_Assign(self, node):
-        # Create an additional assignment if both operands are sparse
-        # Example: 
-        # C = spA * spB  => dB = spB * 1; C = spA * dB
-        # C = spA + spB  => dB = spB * 1; C = spA + dB
-        # C = spA @ spB  => dB = spB * 1; C = spA @ dB
-        # Note that "@" is the form of a call "matmul"        
-        new_stmts = []
-        if isinstance(node.value, ast.BinOp):
-            if isinstance(node.value.left, ast.Name) and isinstance(node.value.right, ast.Name):
-                if node.value.left.id in self.sparse_tensors and node.value.right.id in self.sparse_tensors:
-                    new_var = '__d' + node.value.right.id
-                    new_stmt = new_ast_assign(
-                        new_ast_name(new_var, ctx=ast.Store()),
-                        new_ast_mul(
-                            new_ast_name(node.value.right.id),
-                            new_ast_const(1)
-                        )
-                        
-                    )
-                    new_stmts.append(new_stmt)
-                    node.value.right = new_ast_name(new_var)
-        elif isinstance(node.value, ast.Call) and node.value.func.id == 'matmul':
-            if node.value.args[0].id in self.sparse_tensors and node.value.args[1].id in self.sparse_tensors:
-                new_var = '__d' + node.value.args[1].id
-                new_stmt = new_ast_assign(
-                    new_ast_name(new_var, ctx=ast.Store()),
-                    new_ast_mul(
-                        new_ast_name(node.value.args[1].id),
-                        new_ast_const(1)
-                    )
-                )
-                new_stmts.append(new_stmt)
-                node.value.args[1] = new_ast_name(new_var)
-        return new_stmts + [node]
-
-class ConvertToInplaceSpAddForm(ast.NodeTransformer):
-    def __init__(self, sparse_tensors):
-        self.sparse_tensors = sparse_tensors
-
-    def visit_Assign(self, node):
         '''
         Convert a binary operation to a form that uses in-place update.
         Examples:
@@ -117,11 +77,13 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
                 if isinstance(node.value.right, ast.Name):
                     assert not node.value.right.id in self.sparse_tensors
 
+                node.sparse_info = (node.value.left.id, self.sparse_tensors[node.value.left.id])
                 if isinstance(node.value.op, (ast.Add)):                    
                     new_assign = new_ast_assign(
                         deepcopy_ast_node(node.targets[0], ctx=ast.Store()),
                         deepcopy_ast_node(node.value.right)
                     )
+                    new_assign.indices = node.value.left.indices
                     new_stmts.append(new_assign)
                     node.value = new_ast_add(
                         deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
@@ -132,6 +94,7 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
                         deepcopy_ast_node(node.targets[0], ctx=ast.Store()),
                         new_ast_const(0)
                     )
+                    new_assign.indices = node.value.left.indices
                     new_stmts.append(new_assign)
                     node.value = new_ast_add(
                         deepcopy_ast_node(node.targets[0], ctx=ast.Load()),
@@ -140,8 +103,6 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
         return new_stmts + [node]
 
 def transform(node):
-    visitor1 = ConvertTwoSparseOperandStatements()
-    node = visitor1.visit(node)
-    visitor2 = ConvertToInplaceSpAddForm(visitor1.sparse_tensors)
-    node = visitor2.visit(node)
+    transformer = ConvertToInplaceSpAddForm()
+    node = transformer.visit(node)
     return node

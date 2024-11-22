@@ -32,16 +32,23 @@ class AttachIndexNotation(ast.NodeTransformer):
         return node
 
     def visit_BinOp(self, node):
+        self.generic_visit(node)
         if isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div)):
             node.indices = []
             for operand in [node.left, node.right]:
-                if isinstance(operand, ast.Name):
-                    if len(self.indices_map[operand.id]) > len(node.indices):
-                        node.indices = self.indices_map[operand.id]
+                if len(operand.indices) > len(node.indices):
+                    node.indices = operand.indices
+                # if isinstance(operand, ast.Name):
+                #     if len(self.indices_map[operand.id]) > len(node.indices):
+                #         node.indices = self.indices_map[operand.id]
         elif isinstance(node.op, ast.MatMult):
             assert isinstance(node.left, ast.Name) and isinstance(node.right, ast.Name)
-            a, b = node.left.id, node.right.id
-            node.indices = [self.indices_map[a][0], self.indices_map[b][1]]
+            node.indices = [node.left.indices[0], node.right.indices[1]]
+            # a, b = node.left.id, node.right.id
+            # node.indices = [self.indices_map[a][0], self.indices_map[b][1]]
+        elif isinstance(node.op, ast.Pow):
+            assert isinstance(node.left, ast.Name)
+            node.indices = node.left.indices
         else:
             assert False
         return node
@@ -70,6 +77,11 @@ class AttachIndexNotation(ast.NodeTransformer):
     def visit_Name(self, node):
         if node.id in self.indices_map:
             node.indices = self.indices_map[node.id]
+        return node
+
+    def visit_Constant(self, node):
+        self.generic_visit(node)
+        node.indices = []
         return node
 
     def visit_Assign(self, node):
