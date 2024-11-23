@@ -15,10 +15,8 @@ f1 = compile(f1, dump_code=True, trie_fuse=True, gen_numba_code=True, paralleliz
 for N in [1000, 4000]:
     A = sp.random(N, N, density=0.01, format='csr')
     B = np.random.randn(N, N)
-    alpha = 0.1
-    #print(type(A.multiply(B)), type(A * alpha))
-    #print(np.allclose(A.multiply(B).toarray(), A * B))
+    alpha = 0.1    
     assert np.allclose(f0(A, B), (A.multiply(B)).toarray())
-    assert np.allclose(f1(A, alpha), (A * alpha).toarray())
+    assert np.allclose(f1(A, alpha), (A.multiply(alpha)).toarray())
     
     
