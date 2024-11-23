@@ -95,6 +95,14 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
         C = spA * dB   => C = 0; C = C + spA * dB
         '''
         new_stmts = []
+        if isinstance(node.value, ast.Call) and node.value.func.id == 'matmul':
+            sparse_args = [arg.id for arg in node.value.args if arg.id in self.sparse_tensors]
+            assert len(sparse_args) == 0 or len(sparse_args) == 1
+            if len(sparse_args) == 1:
+                sparse_arg = sparse_args[0]
+                node.sparse_info = (sparse_arg, self.sparse_tensors[sparse_arg])
+            else:
+                pass
         if isinstance(node.value, ast.BinOp):
             if isinstance(node.value.left, ast.Name) and node.value.left.id in self.sparse_tensors:
                 # Some sanity check

@@ -46,13 +46,14 @@ class ConvertDenseLoopToSparseNew(ast.NodeTransformer):
                 stop=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}+1]'),
                 start=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}]'),
             )
-            new_inner_index = f'__p{self.var}_{outer_index}'
-            node.target = new_ast_name(new_inner_index)
+            old_index = node.target.id
+            new_index = f'__p{self.var}_{outer_index}'
+            node.target = new_ast_name(new_index)
             node.body.insert(0, new_ast_assign(
-                new_ast_name(inner_index, ctx=ast.Store()),
-                new_ast_node_from_str(f'{self.var}.indices[{new_inner_index}]')
+                new_ast_name(old_index, ctx=ast.Store()),
+                new_ast_node_from_str(f'{self.var}.indices[{new_index}]')
             ))
-            RewriteSparseTensorRead(self.var, new_inner_index).visit(node)
+            RewriteSparseTensorRead(self.var, new_index).visit(node)
 
         return node
             
@@ -84,7 +85,7 @@ class SparsifyLoops(ast.NodeTransformer):
             orig_node = node.orig_node
             if hasattr(orig_node, 'sparse_info'):
                 var, format = orig_node.sparse_info
-                node = ConvertDenseLoopToSparse(var, format).visit(node)
+                node = ConvertDenseLoopToSparseNew(var, format, self.indices_map).visit(node)
         return node
 
 def transform(node):
