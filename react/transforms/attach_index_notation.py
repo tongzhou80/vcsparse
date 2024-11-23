@@ -31,14 +31,14 @@ class AttachIndexNotation(ast.NodeTransformer):
         self.generic_visit(node)
         return node
 
-    def visit_Subscript(self, node):
-        '''
-        For now just [:, None] and [None, :] are supported.
-        '''
-        self.generic_visit(node)
-        assert ast.unparse(node.slice) in ['(:, None)', '(None, :)'], f"Unsupported slice: {ast.unparse(node.slice)}"
-        node.indices = node.value.indices
-        return node
+    # def visit_Subscript(self, node):
+    #     '''
+    #     For now just [:, None] and [None, :] are supported.
+    #     '''
+    #     self.generic_visit(node)
+    #     assert ast.unparse(node.slice) in ['(:, None)', '(None, :)'], f"Unsupported slice: {ast.unparse(node.slice)}"
+    #     node.indices = node.value.indices
+    #     return node
 
     def visit_BinOp(self, node):
         self.generic_visit(node)

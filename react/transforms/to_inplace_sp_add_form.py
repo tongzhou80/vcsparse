@@ -106,7 +106,8 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
                     pass
             elif node.value.func.id in ('sum', 'max', 'min'):
                 sparse_arg = node.value.args[0].id
-                node.sparse_info = (sparse_arg, self.sparse_tensors[sparse_arg])
+                if sparse_arg in self.sparse_tensors:
+                    node.sparse_info = (sparse_arg, self.sparse_tensors[sparse_arg])
         if isinstance(node.value, ast.BinOp):
             if isinstance(node.value.left, ast.Name) and node.value.left.id in self.sparse_tensors:
                 # Some sanity check
