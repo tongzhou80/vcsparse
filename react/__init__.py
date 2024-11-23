@@ -15,7 +15,20 @@ def Index(*args):
 def Tensor(*args):
     pass
 
-def compile(fn, **options):
+def compile(**args):
+    '''
+    This decorator can either be annotated to a function without any arguments,
+    or it can accept a list of arguments, in which case a new compile function is returned
+    which compiles the function with the given arguments
+    '''
+    if len(args) == 1:
+        return _compile(args[0])
+    else:
+        def _compile_fn(fn):
+            return _compile(fn, **args)
+        return _compile_fn
+
+def _compile(fn, **options):
     newsrc = compile_from_src(inspect.getsource(fn), **options)
     header = textwrap.dedent('''
     import numba
@@ -28,8 +41,13 @@ def compile(fn, **options):
     return getattr(m, fn.__name__)
 
 def compile_from_src(src, **options):
+    if options.get("full_opt", False):
+        options["gen_numba_code"] = True
+        options["memory_opt"] = True
+        options["trie_fuse"] = True
+        options["parallelize"] = True
     tree = ast.parse(src)
-    tree = apply_transform_on_ast(tree, "check_for_undefined", ["Tensor"])
+    tree = apply_transform_on_ast(tree, "check_for_undefined", ["Tensor", "compile"])
     tree = apply_transform_on_ast(tree, "remove_func_decorator")
     tree = convert_matmul_op_to_call.transform(tree)
     tree = apply_transform_on_ast(tree, "to_single_op_form")
