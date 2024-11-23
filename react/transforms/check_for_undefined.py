@@ -42,7 +42,8 @@ def transform(node):
     builtin_names = [
         'Tensor', 
         'matmul', 'sum', 'max', 'min',
-        'pow', 'log', 'exp', 'sin', 'tan'
+        'pow', 'log', 'exp', 'sin', 'tan',
+        'where'
     ]
     visitor = CheckForUndefined(list(visitor.defined) + builtin_names)
     visitor.visit(node)

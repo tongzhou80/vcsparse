@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="react-compiler",                 # Name of the package
-    version="0.1.13",                    # Version
+    version="0.1.14",                    # Version
     author="Tong Zhou",                 # Your name
     author_email="zt9465@gmail.com", # Your email
     description="Redundancy-Aware Code Generation for Tensor Expressions", # Short description
