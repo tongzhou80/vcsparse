@@ -55,7 +55,7 @@ class OpToLoop(ast.NodeTransformer):
 
         orig_node = deepcopy_ast_node(node)
         new_stmt = NameToSubscript(self.indices_map).visit(node)
-        new_stmt = RemoveNoneAxis().visit(new_stmt)
+        #new_stmt = RemoveNoneAxis().visit(new_stmt)
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
             [new_ast_range(new_ast_node_from_str(f'{self.get_bound(index_range[i])}')) for i in indices],
