@@ -15,17 +15,19 @@ def Index(*args):
 def Tensor(*args):
     pass
 
-def compile(**args):
+def compile(fn=None, **args):
     '''
     This decorator can either be annotated to a function without any arguments,
     or it can accept a list of arguments, in which case a new compile function is returned
     which compiles the function with the given arguments
     '''
-    if len(args) == 1:
-        return _compile(args[0])
+    # If no compiler options are given, just return the compiled function
+    if fn != None:
+        return _compile(fn)
+    # Otherwise return a function that accepts a function as an argument, and also pass the compiler arguments
     else:
-        def _compile_fn(fn):
-            return _compile(fn, **args)
+        def _compile_fn(f):
+            return _compile(f, **args)
         return _compile_fn
 
 def _compile(fn, **options):

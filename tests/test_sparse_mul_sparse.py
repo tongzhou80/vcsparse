@@ -18,4 +18,5 @@ def test_sparse_mul_sparse():
         #print(np.allclose(A.multiply(B).toarray(), (A * B).toarray()))
         assert np.allclose(f0(A, B), (A.multiply(B)).toarray())
     
-    
+if __name__ == '__main__':
+    test_sparse_mul_sparse()
