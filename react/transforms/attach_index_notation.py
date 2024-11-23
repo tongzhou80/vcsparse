@@ -40,6 +40,7 @@ class AttachIndexNotation(ast.NodeTransformer):
                     node.indices = operand.indices                
         elif isinstance(node.op, ast.MatMult):
             assert isinstance(node.left, ast.Name) and isinstance(node.right, ast.Name)
+            assert node.left.indices[1] == node.right.indices[0], f"Invalid indices for matmul: {node.left.indices} @ {node.right.indices}"
             node.indices = [node.left.indices[0], node.right.indices[1]]            
         elif isinstance(node.op, ast.Pow):
             assert isinstance(node.left, ast.Name)
