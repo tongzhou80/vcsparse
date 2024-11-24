@@ -55,13 +55,14 @@ class OpToLoop(ast.NodeTransformer):
 
         orig_node = deepcopy_ast_node(node)
         new_stmt = NameToSubscript(self.indices_map).visit(node)
-        #new_stmt = RemoveNoneAxis().visit(new_stmt)
         loop = new_ast_perfect_for(
             [new_ast_name(i) for i in indices],
             [new_ast_range(new_ast_node_from_str(f'{self.get_bound(index_range[i])}')) for i in indices],
             [new_stmt]
         )
         loop.orig_node = orig_node
+
+        FixTransposedAccesses().visit(loop)
 
 
         if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
@@ -90,16 +91,17 @@ class OpToLoop(ast.NodeTransformer):
         else:
             return loop
 
-class RemoveNoneAxis(ast.NodeTransformer):
+class FixTransposedAccesses(ast.NodeTransformer):
     '''
-    This class removes code patterns such as 'a[:, None]' or 'a[None, :]'
+    This rewrites A[i,j] to A[j,i] if A has attribute "is_transpose"
     '''
     def visit_Subscript(self, node):
-        node_str = ast.unparse(node)
-        if node_str.endswith('[:, None]') or node_str.endswith('[None, :]'):
-            return node.value
-        else:
-            return node
+        if isinstance(node.value, ast.Name) and hasattr(node.value, 'is_transpose'):
+            # Swap the indices in the slice
+            elts = node.slice.elts
+            assert len(elts) == 2
+            node.slice.elts = [elts[1], elts[0]]
+        return node
 
 class FixReductionAssign(ast.NodeTransformer):
     def visit_Assign(self, node):
