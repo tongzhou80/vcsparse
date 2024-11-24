@@ -45,6 +45,7 @@ class AttachIndexNotation(ast.NodeTransformer):
         if isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div)):
             node.indices = []
             for operand in [node.left, node.right]:
+                assert hasattr(operand, 'indices'), ast.dump(operand) + ' in ' + ast.unparse(node)
                 if len(operand.indices) > len(node.indices):
                     node.indices = operand.indices                
         elif isinstance(node.op, ast.MatMult):

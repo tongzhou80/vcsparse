@@ -111,7 +111,7 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
         if isinstance(node.value, ast.BinOp):
             if isinstance(node.value.left, ast.Name) and node.value.left.id in self.sparse_tensors:
                 # Some sanity check
-                assert isinstance(node.value.right, (ast.Name, ast.Constant))
+                assert isinstance(node.value.right, (ast.Name, ast.Constant)), ast.unparse(node)
                 if isinstance(node.value.right, ast.Name):
                     assert not node.value.right.id in self.sparse_tensors
 
