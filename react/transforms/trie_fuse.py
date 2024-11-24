@@ -6,12 +6,7 @@ class TrieFuse(ast.NodeTransformer):
         self.fuse_loops_in_body(node)
         return node
 
-    def fuse_loops_in_body(self, node):
-        loops = []
-        for child in node.body:
-            if isinstance(child, ast.For):
-                loops.append(child)
-
+    def do_fusion_group(self, node, loops):
         if len(loops) == 0:
             return
 
@@ -43,5 +38,24 @@ class TrieFuse(ast.NodeTransformer):
             if isinstance(child, ast.For):
                 self.fuse_loops_in_body(child)
 
+
+    def fuse_loops_in_body(self, node):
+        # Find continuous loops in the body, each group becomes a fusion group
+        loops = []
+        in_fusion_group = False
+        for child in node.body:
+            if isinstance(child, ast.For):
+                loops.append(child)
+                in_fusion_group = True
+            else:
+                if in_fusion_group:
+                    # End a fusion group when a non-loop statement is encountered
+                    self.do_fusion_group(node, loops)
+                    loops = []
+                    in_fusion_group = False
+
+        self.do_fusion_group(node, loops)
+
+        
 def transform(node):
     return TrieFuse().visit(node)
