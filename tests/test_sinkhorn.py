@@ -4,7 +4,8 @@ import timeit
 from react import *
 from numpy import empty
 
-@compile(dump_code=True, full_opt=False)
+#@compile(dump_code=True, trie_fuse=True, memory_opt=True, gen_numba_code=True, parallelize=1)
+@compile(dump_code=True, full_opt=True)
 def f0(K: Tensor('k,i'), KT: Tensor('i,k'), x: Tensor('k,j'), c: Tensor('i,j', 'csr'), r: Tensor('k,i'), max_iter = 1):
     it = 0
     while it < max_iter:

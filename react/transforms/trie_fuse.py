@@ -4,6 +4,10 @@ from ast_transforms.utils import *
 class TrieFuse(ast.NodeTransformer):
     def visit_FunctionDef(self, node):
         self.fuse_loops_in_body(node)
+
+        for child in node.body:
+            if isinstance(child, ast.While):
+                self.fuse_loops_in_body(child)
         return node
 
     def do_fusion_group(self, node, loops):
