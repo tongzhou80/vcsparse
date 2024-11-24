@@ -12,12 +12,18 @@ class DefinedVarVisitor(ast.NodeVisitor):
 
 class InsertAllocations(ast.NodeTransformer):
     def visit_FunctionDef(self, node):
+        args = []
+        for arg in node.args.args:
+            args.append(arg.arg)
         assigns = []
         visitor = DefinedVarVisitor()
         visitor.visit(node)
         indices_map = node.indices_map
         index_range = node.index_range
         for v in visitor.defined_vars:
+            # If `v` is a function argument, skip it
+            if v in args:
+                continue
             shape = [f"{index_range[i][0]}.shape[{index_range[i][1]}]" for i in indices_map[v]]
             alloc_func = 'empty'
             alloc = new_ast_assign(
