@@ -96,7 +96,9 @@ class AttachIndexNotation(ast.NodeTransformer):
         self.generic_visit(node)
         self.indices_map[target.id] = node.value.indices
         target.indices = node.value.indices
-        node.type_comment = 'indices: ' + str(node.value.indices)
+        print(self.indices_map)
+        #node.type_comment = 'indices: ' + str(indices)
+        node.type_comment = f'target_indices: {target.indices}, value_indices: {node.value.indices}'
         return node
 
 def transform(tree):

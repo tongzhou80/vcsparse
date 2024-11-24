@@ -53,6 +53,10 @@ class OpToLoop(ast.NodeTransformer):
                     indices.append(idx)
                     index_range[idx] = (v, pos)
 
+        # Sanity check
+        for i in target.indices:
+            assert i in indices, f"Target index {i} not in indices: {indices}" + str(self.indices_map)
+
         orig_node = deepcopy_ast_node(node)
         new_stmt = NameToSubscript(self.indices_map).visit(node)
         loop = new_ast_perfect_for(
@@ -63,7 +67,6 @@ class OpToLoop(ast.NodeTransformer):
         loop.orig_node = orig_node
 
         FixTransposedAccesses().visit(loop)
-
 
         if isinstance(node.value, ast.Call) and node.value.func.id in ['sum', 'max', 'min', 'matmul']:
             if node.value.func.id == 'matmul':
