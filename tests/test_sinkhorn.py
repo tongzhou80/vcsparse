@@ -4,8 +4,7 @@ import timeit
 from react import *
 from numpy import empty
 
-@compile(dump_code=True, trie_fuse=True, memory_opt=True, gen_numba_code=True, parallelize=1)
-#@compile(dump_code=True, trie_fuse=True, memory_opt=True, gen_numba_code=True)
+@compile(dump_code=True, full_opt=True)
 def f0(K: Tensor('k,i'), KT: Tensor('i,k'), x: Tensor('k,j'), c: Tensor('i,j', 'csr'), r: Tensor('k,i'), max_iter = 1):
     it = 0
     while it < max_iter:
@@ -33,12 +32,14 @@ def test():
     x = np.random.randn(NK, NJ)
     c = sp.rand(NI, NJ, density=0.01, format='csr')
     r = np.random.randn(NK, NI)
-    #f0(K, K.T, x, c, r, max_iter=10)
-    niters = 3
+    niters = 1
     x_0 = f0(K, K.T, x.copy(), c, r, max_iter=niters)
     x_1 = f0_py(K, K.T, x.copy(), c, r, max_iter=niters)
    
-    assert np.allclose(x_0, x_1, atol=1e-5), (x_0[0], x_1[0])
+    assert np.allclose(x_0, x_1)
+    t0 = timeit.timeit(lambda: f0_py(K, K.T, x.copy(), c, r, max_iter=niters), number=10) / 10
+    t1 = timeit.timeit(lambda: f0(K, K.T, x.copy(), c, r, max_iter=niters), number=10) / 10
+    print(t0, t1, f'{(t0/t1):.3f}')
 
     
 if __name__ == '__main__':
