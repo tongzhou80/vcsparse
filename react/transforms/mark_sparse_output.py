@@ -14,8 +14,9 @@ class MarkSparseOutput(ast.NodeTransformer):
 
     def visit_Assign(self, node):
         self.generic_visit(node)
-        if node.value.op == '*' or node.value.op == '/':
+        if isinstance(node.value, ast.BinOp) and isinstance(node.value.op, (ast.Mult, ast.Div)):
             if node.value.left.id in self.sparse_tensors:
+                #print("Marking", node.targets[0].id, "as sparse output")
                 self.sparse_tensors[node.targets[0].id] = self.sparse_tensors[node.value.left.id]
         return node
 
