@@ -24,6 +24,9 @@ class InsertAllocations(ast.NodeTransformer):
             # If `v` is a function argument, skip it
             if v in args:
                 continue
+            # If `v` does not participate in the transformation, skip it
+            if v not in indices_map:
+                continue
             shape = [f"{index_range[i][0]}.shape[{index_range[i][1]}]" for i in indices_map[v]]
             alloc_func = 'empty'
             alloc = new_ast_assign(
