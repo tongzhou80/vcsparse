@@ -77,7 +77,9 @@ class AttachIndexNotation(ast.NodeTransformer):
                 axis = node.args[1].value
                 node.indices = [full_indices[i] for i in range(len(full_indices)) if i != axis]
             elif node.func.id == 'matmul':
-                node.indices = [self.indices_map[node.args[0].id][0], self.indices_map[node.args[1].id][1]]
+                full_indices = self.indices_map[node.args[0].id] + self.indices_map[node.args[1].id]
+                # Remove the repeating indices
+                node.indices = [x for x in full_indices if full_indices.count(x) == 1]
         return node
 
     def visit_Name(self, node):
