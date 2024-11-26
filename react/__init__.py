@@ -8,7 +8,7 @@ from .transforms import attach_index_notation, op_to_loop, trie_fuse, insert_all
 from .transforms import assign_sparse_to_dense, sparsify_loops, gen_numba_code, intraloop_scalar_replacement
 from .transforms import remove_unused_array_stores, to_single_sparse_operand_form, to_inplace_sp_add_form
 from .transforms import check_for_undefined, convert_matmul_op_to_call, remove_none_axis, mark_transpose_ops
-from .transforms import convert_sparse_multiply_call
+from .transforms import convert_sparse_multiply_call, fix_sparse_operand_to_left
 
 def Index(*args):
     pass
@@ -65,6 +65,7 @@ def compile_from_src(src, **options):
     else:
         tree = to_single_sparse_operand_form.transform(tree)
     tree = remove_none_axis.transform(tree)
+    tree = fix_sparse_operand_to_left.transform(tree)
     tree = attach_index_notation.transform(tree)
     tree = to_inplace_sp_add_form.transform(tree)
     tree = apply_transform_on_ast(tree, "attach_def_use_vars")
