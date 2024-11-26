@@ -44,6 +44,9 @@ class OpToLoop(ast.NodeTransformer):
             return node
         target = node.targets[0]
         assert isinstance(target, ast.Name)
+        # Skip assignments that don't participate in the transformation
+        if target.id not in self.indices_map:
+            return node
 
         indices = []
         index_range = {}

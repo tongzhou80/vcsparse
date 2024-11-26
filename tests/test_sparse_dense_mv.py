@@ -12,6 +12,9 @@ def test():
         A = sp.random(N, N, density=0.01, format='csr')
         B = np.random.randn(N)
         assert np.allclose(f0(A, B), A @ B)
+        t0 = timeit.timeit(lambda: (A @ B), number=10) / 10
+        t1 = timeit.timeit(lambda: f0(A, B), number=10) / 10
+        print(t0, t1, f'{(t0/t1):.3f}')
     
 if __name__ == '__main__':
     test()

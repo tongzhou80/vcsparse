@@ -35,7 +35,7 @@ def _compile(fn, **options):
     newsrc = compile_from_src(inspect.getsource(fn), **options)
     header = textwrap.dedent('''
     import numba
-    from numpy import empty, zeros
+    from numpy import empty, zeros, matmul
     ''')
     newsrc = header + newsrc
     if options.get("dump_code", False):
@@ -56,6 +56,10 @@ def compile_from_src(src, **options):
     tree = convert_sparse_multiply_call.transform(tree)
     tree = mark_transpose_ops.transform(tree)
     tree = apply_transform_on_ast(tree, "to_single_op_form")
+    if options.get("preprocess_only", False):
+        tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
+        return ast_to_code(tree)
+
     if options.get("to_dense_first", False):
         tree = assign_sparse_to_dense.transform(tree)
     else:
@@ -63,23 +67,21 @@ def compile_from_src(src, **options):
     tree = remove_none_axis.transform(tree)
     tree = attach_index_notation.transform(tree)
     tree = to_inplace_sp_add_form.transform(tree)
-    if not options.get("no_gen_loop", False):
-        tree = apply_transform_on_ast(tree, "attach_def_use_vars")
-        tree = insert_allocations.transform(tree)
-        tree = op_to_loop.transform(tree)
-        tree = sparsify_loops.transform(tree)
-        if options.get("trie_fuse", False):
-            tree = trie_fuse.transform(tree)
-        if options.get("gen_numba_code", False):
-            if options.get("parallelize", False):
-                tree = parallelize.transform(tree)
-            tree = gen_numba_code.transform(tree, options.get("parallelize", False))
-        if options.get("memory_opt", False):
-            tree = intraloop_scalar_replacement.transform(tree)
-            tree = remove_unused_array_stores.transform(tree)
-    
-        tree = apply_transform_on_ast(tree, "where_to_ternary")
+    tree = apply_transform_on_ast(tree, "attach_def_use_vars")
+    tree = insert_allocations.transform(tree)
+    tree = op_to_loop.transform(tree)
+    tree = sparsify_loops.transform(tree)
+    if options.get("trie_fuse", False):
+        tree = trie_fuse.transform(tree)
+    if options.get("gen_numba_code", False):
+        if options.get("parallelize", False):
+            tree = parallelize.transform(tree)
+        tree = gen_numba_code.transform(tree, options.get("parallelize", False))
+    if options.get("memory_opt", False):
+        tree = intraloop_scalar_replacement.transform(tree)
+        tree = remove_unused_array_stores.transform(tree)
 
+    tree = apply_transform_on_ast(tree, "where_to_ternary")
     tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
     return ast_to_code(tree)
 
