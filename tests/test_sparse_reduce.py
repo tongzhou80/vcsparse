@@ -9,7 +9,7 @@ def f0(A: Tensor('i,j', 'csr')):
     return A / b[:, None]
 
 def f0_py(A):
-    b = np.sum(A, 1)
+    b = A.sum(1)
     return A / b
 
 def test():

@@ -78,6 +78,14 @@ class AttachIndexNotation(ast.NodeTransformer):
                 node.indices = [full_indices[i] for i in range(len(full_indices)) if i != axis]
             elif node.func.id == 'matmul':
                 full_indices = self.indices_map[node.args[0].id] + self.indices_map[node.args[1].id]
+                has_repeating_index = False
+                for index in full_indices:
+                    if full_indices.count(index) > 1:
+                        has_repeating_index = True
+                        break
+                assert has_repeating_index, "matmul operator does not contracting indices: " + ast.unparse(node)
+                if has_repeating_index:
+                    node.indices = full_indices
                 # Remove the repeating indices
                 node.indices = [x for x in full_indices if full_indices.count(x) == 1]
         return node
