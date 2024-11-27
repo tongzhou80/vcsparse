@@ -60,14 +60,21 @@ class GenNumbaCode(ast.NodeTransformer):
                 else:
                     actual_args.append(arg)
             
-            outer_func.body.append(
-                new_ast_return(
+            outer_return = new_ast_return(
                     new_ast_call(
                         new_ast_name(node.name),
                         actual_args
                     )
                 )
-            )
+            if '__ret' in sparse_tensors:
+                old_value = outer_return.value
+                outer_return.value = new_ast_call(
+                    new_ast_name('csr_matrix'),
+                    [old_value]
+                )
+
+            outer_func.body.append(outer_return)
+
 
             node = RewriteAttributeWithName(sparse_tensors).visit(node)
 

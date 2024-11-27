@@ -19,7 +19,7 @@ class MarkSparseOutput(ast.NodeTransformer):
         for s in self.new_stmts:
             self.func_body.insert(0, s)
 
-        FixSparseReturns(self.sparse_tensors).visit(node)
+        FixSparseReturns(self.sparse_like).visit(node)
         return node
 
     def visit_Assign(self, node):

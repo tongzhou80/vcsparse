@@ -3,7 +3,7 @@ import numpy as np
 import timeit
 from react import *
 
-@compile(dump_code=True, full_opt=True, use_sparse_output=True, gen_numba_code=1, memory_opt=False)
+@compile(dump_code=True, full_opt=True, use_sparse_output=True, gen_numba_code=1, memory_opt=1)
 def f0(A: Tensor('i,j', 'csr')):
     b = sum(A, 1)
     return A / b[:, None]
@@ -13,7 +13,7 @@ def f0_py(A):
     return A / b
 
 def test():
-    for N in [1000, 4000]:
+    for N in [1000, 4000, 6000]:
         A = sp.random(N, N, density=0.01, format='csr')
         assert np.allclose(f0(A).toarray(), f0_py(A).toarray())
         
