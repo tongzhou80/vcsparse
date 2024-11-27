@@ -1,7 +1,7 @@
 import scipy.sparse as sp
 import numpy as np
 import timeit
-from react import *
+from vcsparse import *
 
 @compile(dump_code=True, full_opt=True)
 def f0(A: Tensor('i,k'), B: Tensor('k,j', 'csr')):
