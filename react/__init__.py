@@ -68,7 +68,8 @@ def compile_from_src(src, **options):
     tree = remove_none_axis.transform(tree)
     tree = fix_sparse_operand_to_left.transform(tree)
     tree = attach_index_notation.transform(tree)
-    tree = mark_sparse_output.transform(tree)
+    if options.get("use_sparse_output", False):
+        tree = mark_sparse_output.transform(tree)
     tree = to_inplace_sp_add_form.transform(tree)
     tree = apply_transform_on_ast(tree, "attach_def_use_vars")
     tree = attach_iter_space_info.transform(tree)
