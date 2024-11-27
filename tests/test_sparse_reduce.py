@@ -13,7 +13,7 @@ def f0_py(A):
     return A / b
 
 def test():
-    for N in [1000, 4000, 6000]:
+    for N in [1000, 4000, 8000]:
         A = sp.random(N, N, density=0.01, format='csr')
         assert np.allclose(f0(A).toarray(), f0_py(A).toarray())
         

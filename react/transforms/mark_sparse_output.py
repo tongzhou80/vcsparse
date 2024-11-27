@@ -24,7 +24,7 @@ class MarkSparseOutput(ast.NodeTransformer):
 
     def visit_Assign(self, node):
         self.generic_visit(node)
-        if isinstance(node.value, ast.BinOp) and isinstance(node.value.op, (ast.Mult, ast.Div)):
+        if isinstance(node.value, ast.BinOp) and isinstance(node.value.op, (ast.Mult, ast.Div)) and isinstance(node.value.left, ast.Name):
             if node.value.left.id in self.sparse_tensors and node.value.right.id not in self.sparse_tensors:
                 #print("Marking", node.targets[0].id, "as sparse output")
                 node.use_sparse_output = True
@@ -32,9 +32,15 @@ class MarkSparseOutput(ast.NodeTransformer):
                 target = node.targets[0].id
                 self.sparse_tensors[target] = self.sparse_tensors[left]
                 self.sparse_like[target] = left
-                sp_init = new_ast_node_from_str(f'{target}_data = empty_like({left}.data)', inline=False)
-                sp_init.dont_transform = True
-                self.new_stmts.append(sp_init)
+                sp_inits = [
+                    new_ast_node_from_str(f'{target}_data = empty_like({left}.data)', inline=False),
+                    new_ast_node_from_str(f'{target}_shape = {left}.shape', inline=False),
+                    new_ast_node_from_str(f'{target}_indices = {left}.indices', inline=False),
+                    new_ast_node_from_str(f'{target}_indptr = {left}.indptr', inline=False),
+                ]
+                for s in sp_inits:
+                    s.dont_transform = True
+                self.new_stmts.extend(sp_inits)
 
         return node
 
