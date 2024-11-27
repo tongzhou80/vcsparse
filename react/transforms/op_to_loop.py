@@ -35,7 +35,8 @@ class OpToLoop(ast.NodeTransformer):
         return None
 
     def get_bound(self, t):
-        return f'{t[0]}.shape[{t[1]}]'
+        assert len(t) == 3 and t[0] in ('dense', 'sparse')
+        return f'{t[1]}.shape[{t[2]}]'
 
     def visit_Assign(self, node):
         if isinstance(node.value, ast.Call) and node.value.func.id in ['empty', 'zeros', 'ones']:
@@ -52,7 +53,10 @@ class OpToLoop(ast.NodeTransformer):
             for pos,idx in enumerate(self.indices_map[v]):
                 if idx not in indices:
                     indices.append(idx)
-                    index_range[idx] = (v, pos)
+                    # Make the iteration space dense by default
+                    index_range[idx] = ('dense', v, pos)
+        #index_range = node.iter_space_info
+        #print(index_range)     
 
         # Sanity check
         for i in target.indices:

@@ -44,7 +44,7 @@ class AttachSparseInfo(ast.NodeTransformer):
                 assert False, "Unsupported sparse format: " + format
 
         node.sparse_tensors = sparse_vars
-        node.sparse_iteration_spacess = iteration_spaces
+        node.iter_space_info = iteration_spaces
         node.indices = indices
         # dump_code(node)
         # print(node.sparse_tensors)
