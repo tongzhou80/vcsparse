@@ -29,31 +29,28 @@ class ConvertDenseLoopToSparse(ast.NodeTransformer):
         return node
 
 class ConvertDenseLoopToSparseNew(ast.NodeTransformer):
-    def __init__(self, var, format, indices_map):
-        self.var = var
-        self.format = format
-        self.indices_map = indices_map
-        if self.format == 'csr':
-            self.sparse_index = self.indices_map[self.var][1]
-        else:
-            assert False, "Non-CSR format not supported yet"
+    def __init__(self, iter_space_info, sparse_tensors):
+        self.iter_space_info = iter_space_info
+        self.sparse_tensors = sparse_tensors
 
     def visit_For(self, node):
         self.generic_visit(node)
-        if node.target.id == self.sparse_index:
-            outer_index = self.indices_map[self.var][0]
+        is_info = self.iter_space_info
+        dense_or_sparse, tensor, index = is_info[node.target.id]
+        if dense_or_sparse == 'sparse':
             node.iter = new_ast_range(
-                stop=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}+1]'),
-                start=new_ast_node_from_str(f'{self.var}.indptr[{outer_index}]'),
+                stop=new_ast_node_from_str(f'{tensor}.indptr[{index}+1]'),
+                start=new_ast_node_from_str(f'{tensor}.indptr[{index}]'),
             )
             old_index = node.target.id
-            new_index = f'__p{self.var}_{outer_index}'
+            new_index = f'__p{tensor}_{index}'
             node.target = new_ast_name(new_index)
             node.body.insert(0, new_ast_assign(
                 new_ast_name(old_index, ctx=ast.Store()),
-                new_ast_node_from_str(f'{self.var}.indices[{new_index}]')
+                new_ast_node_from_str(f'{tensor}.indices[{new_index}]')
             ))
-            RewriteSparseTensorRead(self.var, new_index).visit(node)
+            for st in self.sparse_tensors:
+                RewriteSparseTensorRead(st, new_index).visit(node)
 
         return node
             
@@ -83,9 +80,11 @@ class SparsifyLoops(ast.NodeTransformer):
 
         if hasattr(node, 'orig_node'):
             orig_node = node.orig_node
-            if hasattr(orig_node, 'sparse_info'):
-                var, format = orig_node.sparse_info
-                node = ConvertDenseLoopToSparseNew(var, format, self.indices_map).visit(node)
+            if hasattr(orig_node, 'iter_space_info'):
+                node = ConvertDenseLoopToSparseNew(
+                            orig_node.iter_space_info,
+                            orig_node.sparse_tensors
+                            ).visit(node)
         return node
 
 def transform(node):

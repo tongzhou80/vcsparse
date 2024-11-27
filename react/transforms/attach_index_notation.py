@@ -103,6 +103,7 @@ class AttachIndexNotation(ast.NodeTransformer):
         assert isinstance(target, ast.Name)
         self.generic_visit(node)
         if not hasattr(node.value, 'indices'):
+            node.dont_transform = True
             return node
             #raise Exception("node.value has no indices: " + ast.unparse(node))
         self.indices_map[target.id] = node.value.indices

@@ -13,6 +13,9 @@ class AttachSparseInfo(ast.NodeTransformer):
         return node
 
     def visit_Assign(self, node):
+        if hasattr(node, 'dont_transform'):
+            return node
+
         indices = []
         iteration_spaces = {}
         for v in node.use_vars + node.def_vars: 
