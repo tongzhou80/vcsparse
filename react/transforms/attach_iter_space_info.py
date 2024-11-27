@@ -19,8 +19,6 @@ class AttachSparseInfo(ast.NodeTransformer):
 
         indices = []
         iteration_spaces = {}
-        dump_code(node)
-        print(node.use_vars + node.def_vars)
         for v in node.use_vars + node.def_vars: 
             for pos,idx in enumerate(self.indices_map[v]):
                 if idx not in indices:

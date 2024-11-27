@@ -27,6 +27,9 @@ class IntraloopScalarReplacement(ast.NodeTransformer):
         for i, child in enumerate(node.body):
             # Check all top-level array store statements
             if isinstance(child, ast.Assign) and isinstance(child.targets[0], ast.Subscript):
+                # Note that currently use_sparse_output only works in numba mode. In python mode, this place
+                # will trigger an error
+                #dump_code(child)
                 target = child.targets[0]
                 arrayname = target.value.id
                 indices_str = ast.unparse(target.slice)

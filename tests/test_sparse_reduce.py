@@ -3,7 +3,7 @@ import numpy as np
 import timeit
 from react import *
 
-@compile(dump_code=True, full_opt=True, use_sparse_output=True, gen_numba_code=1, memory_opt=1)
+@compile(dump_code=True, full_opt=True, use_sparse_output=True)
 def f0(A: Tensor('i,j', 'csr')):
     b = sum(A, 1)
     return A / b[:, None]
