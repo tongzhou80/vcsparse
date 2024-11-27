@@ -105,6 +105,8 @@ class ConvertToInplaceSpAddForm(ast.NodeTransformer):
                         node.value.left
                     )
                 elif isinstance(node.value.op, (ast.Mult, ast.Div)):
+                    if hasattr(node, 'use_sparse_output'):
+                        return node
                     new_assign = new_ast_assign(
                         deepcopy_ast_node(node.targets[0], ctx=ast.Store()),
                         new_ast_const(0)

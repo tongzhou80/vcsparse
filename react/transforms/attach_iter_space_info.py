@@ -1,5 +1,6 @@
 import ast
 from ast_transforms.utils import *
+from collections import OrderedDict
 
 class AttachSparseInfo(ast.NodeTransformer):
     def __init__(self):
@@ -25,12 +26,13 @@ class AttachSparseInfo(ast.NodeTransformer):
                     # Make the iteration space dense by default
                     iteration_spaces[idx] = ('dense', v, pos)
 
-        sparse_vars = {}
-        for var in node.use_vars + node.def_vars:
+        sparse_vars = OrderedDict()
+        for var in node.def_vars + node.use_vars:
             if var in self.sparse_tensors:
                 sparse_vars[var] = self.sparse_tensors[var]
 
-        
+        # This might assign iter space to an index multiple times, so an index will get its
+        # iter space from the last assignment
         for var, format in sparse_vars.items():
             indices = self.indices_map[var]
             if format == 'csr':

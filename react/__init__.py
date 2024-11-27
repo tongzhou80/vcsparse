@@ -36,7 +36,8 @@ def _compile(fn, **options):
     newsrc = compile_from_src(inspect.getsource(fn), **options)
     header = textwrap.dedent('''
     import numba
-    from numpy import empty, zeros, matmul
+    from numpy import empty, zeros, matmul, empty_like
+    from scipy.sparse import csr_matrix
     ''')
     newsrc = header + newsrc
     if options.get("dump_code", False):
@@ -46,10 +47,15 @@ def _compile(fn, **options):
 
 def compile_from_src(src, **options):
     if options.get("full_opt", False):
-        options["gen_numba_code"] = True
-        options["memory_opt"] = True
-        options["trie_fuse"] = True
-        options["parallelize"] = True
+        if "gen_numba_code" not in options:
+            options["gen_numba_code"] = True
+        if "memory_opt" not in options:
+            options["memory_opt"] = True
+        if "trie_fuse" not in options:
+            options["trie_fuse"] = True
+        if "parallelize" not in options:
+            options["parallelize"] = True
+    
     tree = ast.parse(src)
     tree = check_for_undefined.transform(tree)
     tree = apply_transform_on_ast(tree, "remove_func_decorator")
@@ -82,6 +88,7 @@ def compile_from_src(src, **options):
         if options.get("parallelize", False):
             tree = parallelize.transform(tree)
         tree = gen_numba_code.transform(tree, options.get("parallelize", False))
+
     if options.get("memory_opt", False):
         tree = intraloop_scalar_replacement.transform(tree)
         tree = remove_unused_array_stores.transform(tree)
