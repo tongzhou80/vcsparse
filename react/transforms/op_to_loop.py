@@ -39,7 +39,7 @@ class OpToLoop(ast.NodeTransformer):
         return f'{t[1]}.shape[{t[2]}]'
 
     def visit_Assign(self, node):
-        if isinstance(node.value, ast.Call) and node.value.func.id in ['empty', 'zeros', 'ones', 'csr_matrix']:
+        if isinstance(node.value, ast.Call) and node.value.func.id in ['empty', 'empty_like', 'zeros', 'ones', 'csr_matrix']:
             return node
         target = node.targets[0]
         assert isinstance(target, ast.Name)

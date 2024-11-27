@@ -8,6 +8,7 @@ class MarkSparseOutput(ast.NodeTransformer):
     def __init__(self):
         self.sparse_tensors = None
         self.func_body = None
+        self.sparse_like = {}
         self.new_stmts = []
 
     def visit_FunctionDef(self, node):
@@ -17,6 +18,8 @@ class MarkSparseOutput(ast.NodeTransformer):
 
         for s in self.new_stmts:
             self.func_body.insert(0, s)
+
+        FixSparseReturns(self.sparse_tensors).visit(node)
         return node
 
     def visit_Assign(self, node):
@@ -28,8 +31,21 @@ class MarkSparseOutput(ast.NodeTransformer):
                 left = node.value.left.id
                 target = node.targets[0].id
                 self.sparse_tensors[target] = self.sparse_tensors[left]
-                sp_init = new_ast_node_from_str(f'{target} = csr_matrix((empty_like({left}.data), {left}.indices, {left}.indptr), shape={left}.shape)', inline=False)
+                self.sparse_like[target] = left
+                sp_init = new_ast_node_from_str(f'{target}_data = empty_like({left}.data)', inline=False)
+                sp_init.dont_transform = True
                 self.new_stmts.append(sp_init)
+
+        return node
+
+class FixSparseReturns(ast.NodeTransformer):
+    def __init__(self, sparse_like):
+        self.sparse_like = sparse_like
+
+    def visit_Return(self, node):
+        if node.value.id in self.sparse_like:
+            other = self.sparse_like[node.value.id]
+            node.value = new_ast_node_from_str(f'({node.value.id}_data, {other}_indices, {other}_indptr)')
         return node
 
 def transform(node):

@@ -1,5 +1,5 @@
 import ast
-from .utils import *
+from ast_transforms.utils import *
 
 class AttachIndexNotation(ast.NodeTransformer):
     def __init__(self):
@@ -105,7 +105,10 @@ class AttachIndexNotation(ast.NodeTransformer):
         if not hasattr(node.value, 'indices'):
             node.dont_transform = True
             return node
-            #raise Exception("node.value has no indices: " + ast.unparse(node))
+        if isinstance(node.value, ast.Call) and node.value.func.id in ['empty', 'empty_like']:
+            print('dont transform', ast.unparse(node))
+            node.dont_transform = True
+            return node
         self.indices_map[target.id] = node.value.indices
         target.indices = node.value.indices
         #node.type_comment = 'indices: ' + str(indices)
