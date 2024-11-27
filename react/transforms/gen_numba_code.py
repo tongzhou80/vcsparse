@@ -22,17 +22,8 @@ class GenNumbaCode(ast.NodeTransformer):
         pass to a newly generated function, which is decorated with @numba.njit and 
         contains the actual function body
         '''
-        sparse_tensors = {}
-        indices_map = {}
-        for arg in node.args.args:
-            varname = arg.arg
-            indices = []
-            if hasattr(arg, 'annotation') and arg.annotation is not None:
-                index_str = arg.annotation.args[0].value
-                indices = index_str.split(',')
-                if len(arg.annotation.args) > 1:
-                    sparse_tensors[varname] = arg.annotation.args[1].value
-            indices_map[varname] = indices
+        sparse_tensors = node.sparse_tensors
+        indices_map = node.indices_map
 
         node.decorator_list.append(new_ast_node_from_str(f"numba.njit(parallel={self.parallel})"))
         if len(sparse_tensors) > 0:
