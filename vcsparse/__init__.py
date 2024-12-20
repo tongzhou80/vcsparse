@@ -55,6 +55,10 @@ def compile_from_src(src, **options):
             options["trie_fuse"] = True
         if "parallelize" not in options:
             options["parallelize"] = True
+
+    # If gen_appy_code is True, disable gen_numba_code
+    if options.get("backend", False) == "appy":
+        options["gen_numba_code"] = False
     
     tree = ast.parse(src)
     tree = check_for_undefined.transform(tree)
