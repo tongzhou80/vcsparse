@@ -1,10 +1,10 @@
 
-import cupy as np
-import cupyx.scipy.sparse as sp
-import timeit
+# import cupy as np
+# import cupyx.scipy.sparse as sp
+# import timeit
 from vcsparse import *
 
-@compile(dump_code=True, full_opt=True)
+@compile(dump_code=True, full_opt=True, trie_fuse=True)
 def f0(A: Tensor('i,j'), B: Tensor('i,j', 'csr')):
     return A + B
 
