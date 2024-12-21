@@ -1,59 +1,46 @@
-import torch
+import cupy as np
+import cupyx.scipy.sparse as sp
+import timeit
 from vcsparse import *
-
-torch.set_default_device('cuda')
-
-def sparse_randn(shape, density, device='cuda'):
-    """
-    Creates a random sparse CSR matrix with a given shape and density on the specified device.
-    
-    Args:
-        shape (tuple): Shape of the sparse matrix (rows, cols).
-        density (float): Fraction of non-zero elements (0 < density <= 1).
-        device (str): Target device ('cuda' for GPU or 'cpu').
-    
-    Returns:
-        torch.Tensor: Sparse CSR matrix on the specified device.
-    """
-    rows, cols = shape
-    total_elements = rows * cols
-    num_nonzeros = int(total_elements * density)
-
-    # Randomly generate row and column indices
-    row_indices = torch.randint(0, rows, (num_nonzeros,), device=device)
-    col_indices = torch.randint(0, cols, (num_nonzeros,), device=device)
-    
-    # Sort row indices to ensure CSR format correctness
-    sorted_indices = torch.argsort(row_indices)
-    row_indices = row_indices[sorted_indices]
-    col_indices = col_indices[sorted_indices]
-
-    # Generate random values for the non-zero elements
-    values = torch.randn(num_nonzeros, device=device)
-
-    # Build the crow_indices for CSR format
-    crow_indices = torch.zeros(rows + 1, dtype=torch.int32, device=device)
-    crow_indices.scatter_add_(0, row_indices + 1, torch.ones(num_nonzeros, dtype=torch.int32, device=device))
-    crow_indices = torch.cumsum(crow_indices, dim=0)
-
-    # Create the sparse CSR tensor
-    sparse_csr_tensor = torch.sparse_csr_tensor(crow_indices, col_indices, values, size=(rows, cols), device=device)
-
-    return sparse_csr_tensor
-
 
 @compile(dump_code=True, full_opt=True, backend='appy')
 def f0(A: Tensor('i,j'), B: Tensor('i,j', 'csr')):
     return A + B
 
+# import appy
+# from cupy import empty, zeros, matmul, empty_like
+# from cupyx.scipy.sparse import csr_matrix
+# appy.config.tensorlib = 'cupy'
+# @appy.jit
+# def _f0(A, B_indptr, B_indices, B_data, B_shape):
+#     __ret = cupy.empty((A.shape[0], A.shape[1]))
+#     __ret_shape_1 = __ret.shape[1]
+#     __ret_shape_0 = __ret.shape[0]
+#     #pragma parallel for
+#     for i in range(0, __ret_shape_0, 1):
+#         for j in range(0, __ret_shape_1, 1):
+#             __ret[i, j] = A[i, j]
+#         for __pB_i in range(B_indptr[i], B_indptr[i + 1], 1):
+#             j = B_indices[__pB_i]
+#             __ret[i, j] = __ret[i, j] + B_data[__pB_i] # target_indices: ['i', 'j']
+#     return __ret
+
+# def f0(A, B):
+#     return _f0(A, B.indptr, B.indices, B.data, B.shape)
+
 def test_dense_add_sparse():
-    for density in [0.01, 0.04]:
-        for N in [1000, 4000]:
-            # Gen a dense matrix A of size N x N, and a sparse matrix B given density
-            A = torch.randn(N, N)
-            B = sparse_randn((N, N), density)
-            print(A+B)
-            print(f0(A, B))
+    for N in [1000, 4000, 8000]:
+        A = np.random.randn(N, N)
+        B = sp.random(N, N, density=0.01, format='csr')
+        #print(A+B)        
+        #print(f0(A, B))
+        assert np.allclose(f0(A, B), (A + B))
+
+        import triton
+        t0 = triton.testing.do_bench(lambda: A + B)
+        t1 = triton.testing.do_bench(lambda: f0(A, B))
+        print(t0, t1, t0/t1)
+        
 
     
 if __name__ == '__main__':
