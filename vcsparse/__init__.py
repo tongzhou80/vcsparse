@@ -9,7 +9,7 @@ from .transforms import assign_sparse_to_dense, sparsify_loops, gen_numba_code, 
 from .transforms import remove_unused_array_stores, to_single_sparse_operand_form, to_inplace_sp_add_form
 from .transforms import check_for_undefined, convert_matmul_op_to_call, remove_none_axis, mark_transpose_ops
 from .transforms import convert_sparse_multiply_call, fix_sparse_operand_to_left, attach_iter_space_info
-from .transforms import mark_sparse_output, rewrite_shape_attr_to_var, create_inner_kernel
+from .transforms import mark_sparse_output, rewrite_shape_attr_to_var, create_inner_kernel, gen_appy_code
 
 def Index(*args):
     pass
@@ -103,6 +103,9 @@ def compile_from_src(src, **options):
             tree = parallelize.transform(tree)
         tree = create_inner_kernel.transform(tree)
         tree = gen_numba_code.transform(tree, options.get("parallelize", False))
+    elif options.get("backend", "numba") == "appy":
+        tree = create_inner_kernel.transform(tree)
+        tree = gen_appy_code.transform(tree)
 
     if options.get("memory_opt", False):
         tree = intraloop_scalar_replacement.transform(tree)
@@ -113,4 +116,5 @@ def compile_from_src(src, **options):
     return ast_to_code(tree)
 
 def ast_to_code(tree):
+    import ast_comments as ast
     return ast.unparse(tree).replace('# type:', '#')
