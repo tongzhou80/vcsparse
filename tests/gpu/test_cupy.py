@@ -8,26 +8,26 @@ from vcsparse import *
 def f0(A: Tensor('i,j'), B: Tensor('i,j', 'csr')):
     return A + B
 
-import appy
-from cupy import empty, zeros, matmul, empty_like
-from cupyx.scipy.sparse import csr_matrix
-appy.config.tensorlib = 'cupy'
-@appy.jit
-def _f0(A, B_indptr, B_indices, B_data, B_shape):
-    __ret = cupy.empty((A.shape[0], A.shape[1]))
-    __ret_shape_1 = __ret.shape[1]
-    __ret_shape_0 = __ret.shape[0]
-    #pragma parallel for
-    for i in range(0, __ret_shape_0, 1):
-        for j in range(0, __ret_shape_1, 1):
-            __ret[i, j] = A[i, j]
-        for __pB_i in range(B_indptr[i], B_indptr[i + 1], 1):
-            j = B_indices[__pB_i]
-            __ret[i, j] = __ret[i, j] + B_data[__pB_i] # target_indices: ['i', 'j']
-    return __ret
+# import appy
+# from cupy import empty, zeros, matmul, empty_like
+# from cupyx.scipy.sparse import csr_matrix
+# appy.config.tensorlib = 'cupy'
+# @appy.jit
+# def _f0(A, B_indptr, B_indices, B_data, B_shape):
+#     __ret = cupy.empty((A.shape[0], A.shape[1]))
+#     __ret_shape_1 = __ret.shape[1]
+#     __ret_shape_0 = __ret.shape[0]
+#     #pragma parallel for
+#     for i in range(0, __ret_shape_0, 1):
+#         for j in range(0, __ret_shape_1, 1):
+#             __ret[i, j] = A[i, j]
+#         for __pB_i in range(B_indptr[i], B_indptr[i + 1], 1):
+#             j = B_indices[__pB_i]
+#             __ret[i, j] = __ret[i, j] + B_data[__pB_i] # target_indices: ['i', 'j']
+#     return __ret
 
-def f0(A, B):
-    return _f0(A, B.indptr, B.indices, B.data, B.shape)
+# def f0(A, B):
+#     return _f0(A, B.indptr, B.indices, B.data, B.shape)
 
 
 @compile(dump_code=True, full_opt=True)

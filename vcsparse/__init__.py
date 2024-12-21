@@ -38,7 +38,11 @@ def _compile(fn, **options):
     newsrc = header + newsrc
     if options.get("dump_code", False):
         print(newsrc)
-    m = ast_transforms.utils.load_code(newsrc)
+
+    keep_file = False
+    if options.get('backend', 'numba') == 'appy':
+        keep_file = True
+    m = ast_transforms.utils.load_code(newsrc, keep_file)
     return getattr(m, fn.__name__)
 
 def get_imports(**options):
