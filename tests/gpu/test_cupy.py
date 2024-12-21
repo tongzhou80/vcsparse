@@ -23,10 +23,10 @@ def _f0(A, B_indptr, B_indices, B_data, B_shape):
         #pragma simd
         for j in range(0, N, 1):
             __ret[i, j] = A[i, j]
-        ##pragma simd
+     
         for __pB_i in range(B_indptr[i], B_indptr[i + 1], 1):
-            j1 = B_indices[__pB_i]
-            __ret[i, j1] = __ret[i, j1] + B_data[__pB_i] # target_indices: ['i', 'j']
+            j = B_indices[__pB_i]
+            __ret[i, j] = __ret[i, j] + B_data[__pB_i] # target_indices: ['i', 'j']
     return __ret
 
 def f0(A, B):
