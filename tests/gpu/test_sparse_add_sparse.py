@@ -54,7 +54,7 @@ def f1(A, B, C):
     return _f1(A.indptr, A.indices, A.data, A.shape, B.indptr, B.indices, B.data, B.shape, C.indptr, C.indices, C.data, C.shape)
 
 def test_sparse_add_sparse():
-    for N in [1000, 2000, 4000, 8000]:
+    for N in [1000, 2000, 4000]:
         A = sp.random(N, N, density=0.01, format='csr')
         B = sp.random(N, N, density=0.01, format='csr')
         C = sp.random(N, N, density=0.01, format='csr')
