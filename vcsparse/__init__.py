@@ -34,16 +34,29 @@ def compile(fn=None, **args):
 
 def _compile(fn, **options):
     newsrc = compile_from_src(inspect.getsource(fn), **options)
-    header = textwrap.dedent('''
-    import numba
-    from numpy import empty, zeros, matmul, empty_like
-    from scipy.sparse import csr_matrix
-    ''')
+    header = get_imports(**options)
     newsrc = header + newsrc
     if options.get("dump_code", False):
         print(newsrc)
     m = ast_transforms.utils.load_code(newsrc)
     return getattr(m, fn.__name__)
+
+def get_imports(**options):
+    imports = ''
+    if options.get("backend", "numba") == "numba":
+        imports = textwrap.dedent('''
+            import numba
+            from numpy import empty, zeros, matmul, empty_like
+            from scipy.sparse import csr_matrix
+        ''')
+    elif options.get("backend", "numba") == "appy":
+        imports = textwrap.dedent('''
+            import appy
+            from cupy import empty, zeros, matmul, empty_like
+            from cupyx.scipy.sparse import csr_matrix
+            appy.config.tensorlib = 'cupy'
+        ''')
+    return imports
 
 def compile_from_src(src, **options):
     if options.get("full_opt", False):
@@ -55,10 +68,6 @@ def compile_from_src(src, **options):
             options["trie_fuse"] = True
         if "parallelize" not in options:
             options["parallelize"] = True
-
-    # If gen_appy_code is True, disable gen_numba_code
-    if options.get("backend", False) == "appy":
-        options["gen_numba_code"] = False
     
     tree = ast.parse(src)
     tree = check_for_undefined.transform(tree)
@@ -89,7 +98,7 @@ def compile_from_src(src, **options):
     tree = rewrite_shape_attr_to_var.transform(tree)
     if options.get("trie_fuse", False):
         tree = trie_fuse.transform(tree)
-    if options.get("gen_numba_code", False):
+    if options.get("backend", "numba") == "numba":
         if options.get("parallelize", False):
             tree = parallelize.transform(tree)
         tree = create_inner_kernel.transform(tree)
