@@ -25,7 +25,6 @@ class TrieFuse(ast.NodeTransformer):
             fused_loops_count = 0
             # Try to fuse with the subsequent loops
             for loop in loops[(i+1):]:
-                print('in fusion:', host.target.id, loop.target.id)
                 if host.target.id == loop.target.id:
                     host.body.extend(loop.body)
                     loops_to_be_removed.append(loop)
