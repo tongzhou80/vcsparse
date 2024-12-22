@@ -37,21 +37,21 @@ def _f1(A_indptr, A_indices, A_data, A_shape, B_indptr, B_indices, B_data, B_sha
         for __pB_i in range(B_indptr[i], B_indptr[i + 1], 1):
             j1 = B_indices[__pB_i]
             __dB[i, j1] = __dB[i, j1] + B_data[__pB_i] * 1 # target_indices: ['i', 'j']
-        #pragma simd
-        for j in range(0, __v2_shape_1, 1):
-            __v2[i, j] = __dB[i, j]
+        # #pragma simd
+        # for j in range(0, __v2_shape_1, 1):
+        #     __v2[i, j] = __dB[i, j]
         #pragma simd(128)
         for __pA_i in range(A_indptr[i], A_indptr[i + 1], 1):
             j2 = A_indices[__pA_i]
-            __v2[i, j2] = __v2[i, j2] + A_data[__pA_i] # target_indices: ['i', 'j']
-        #pragma simd
-        for j in range(0, __ret_shape_1, 1):
-            __ret[i, j] = __v2[i, j]
+            __dB[i, j2] = __dB[i, j2] + A_data[__pA_i] # target_indices: ['i', 'j']
+        # #pragma simd
+        # for j in range(0, __ret_shape_1, 1):
+        #     __ret[i, j] = __dB[i, j]
         #pragma simd(128)
         for __pC_i in range(C_indptr[i], C_indptr[i + 1], 1):
             j3 = C_indices[__pC_i]
-            __ret[i, j3] = __ret[i, j3] + C_data[__pC_i] # target_indices: ['i', 'j']
-    return __ret
+            __dB[i, j3] = __dB[i, j3] + C_data[__pC_i] # target_indices: ['i', 'j']
+    return __dB
 
 def f1(A, B, C):
     return _f1(A.indptr, A.indices, A.data, A.shape, B.indptr, B.indices, B.data, B.shape, C.indptr, C.indices, C.data, C.shape)
