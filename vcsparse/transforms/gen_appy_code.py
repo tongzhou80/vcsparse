@@ -1,7 +1,7 @@
 from ast_transforms.utils import *
 import ast_comments as ast
 
-class GenAPPyCode(ast.NodeTransformer):
+class AnnotateOuterLoop(ast.NodeTransformer):
     def __init__(self, *args):
         pass
 
@@ -18,5 +18,31 @@ class GenAPPyCode(ast.NodeTransformer):
             return comment, node
         return node
 
+
+class LoopFinder(ast.NodeVisitor):
+    def __init__(self):
+        self.loops = []
+
+    def visit_For(self, node):
+        self.generic_visit(node)
+        self.loops.append(node)
+
+
+class AnnotateInnerLoop(ast.NodeTransformer):
+    def visit_For(self, node):
+        self.generic_visit(node)
+        # If the loop is an innermost loop, annotate it with `#pragma simd`
+        if not hasattr(node, 'is_reduction'):
+            visitor = LoopFinder()
+            visitor.visit(node)
+
+            if len(visitor.loops) == 1:
+                comment = ast.Comment(value='#pragma simd', inline=False)
+                return comment, node
+
+        return node
+
 def transform(tree, *args):
-    return GenAPPyCode(*args).visit(tree)
+    tree = AnnotateOuterLoop(*args).visit(tree)
+    tree = AnnotateInnerLoop(*args).visit(tree)
+    return tree
