@@ -2,6 +2,7 @@ import cupy as np
 import cupyx.scipy.sparse as sp
 import triton
 from vcsparse import *
+np.cuda.runtime.setDevice(1)
 
 @compile(dump_code=True, full_opt=True, backend='appy')
 def f0(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
@@ -20,14 +21,14 @@ appy.config.tensorlib = 'cupy'
 @appy.jit
 def _f1(A_indptr, A_indices, A_data, A_shape, B_indptr, B_indices, B_data, B_shape, C_indptr, C_indices, C_data, C_shape):
     __dB = empty((A_shape[0], A_shape[1]))
-    __v2 = empty((A_shape[0], A_shape[1]))
-    __ret = empty((A_shape[0], A_shape[1]))
+    #__v2 = empty((A_shape[0], A_shape[1]))
+    #__ret = empty((A_shape[0], A_shape[1]))
     __dB_shape_1 = __dB.shape[1]
     __dB_shape_0 = __dB.shape[0]
-    __v2_shape_1 = __v2.shape[1]
-    __v2_shape_0 = __v2.shape[0]
-    __ret_shape_1 = __ret.shape[1]
-    __ret_shape_0 = __ret.shape[0]
+    # __v2_shape_1 = __v2.shape[1]
+    # __v2_shape_0 = __v2.shape[0]
+    # __ret_shape_1 = __ret.shape[1]
+    # __ret_shape_0 = __ret.shape[0]
     #pragma parallel for
     for i in range(0, __dB_shape_0, 1):
         #pragma simd

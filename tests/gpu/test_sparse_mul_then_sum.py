@@ -2,6 +2,7 @@ import cupy as np
 import cupyx.scipy.sparse as sp
 import triton
 from vcsparse import *
+np.cuda.runtime.setDevice(1)
 
 @compile(dump_code=True, full_opt=True, backend='appy')
 def f0(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr')):
@@ -48,9 +49,8 @@ def f0(A, B):
 
 def test():
     for N in [1000, 4000, 8000]:
-        # Denser inputs lead to better perf
-        A = sp.random(N, N, density=0.1, format='csr')        
-        B = sp.random(N, N, density=0.1, format='csr')
+        A = sp.random(N, N, density=0.01, format='csr')        
+        B = sp.random(N, N, density=0.01, format='csr')
         assert np.allclose(f0(A, B), np.squeeze(A.multiply(B).sum(axis=1)))
 
         t0 = triton.testing.do_bench(lambda: A.multiply(B).sum(axis=1))
