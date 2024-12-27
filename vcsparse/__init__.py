@@ -97,6 +97,11 @@ def compile_from_src(src, **options):
     tree = apply_transform_on_ast(tree, "attach_def_use_vars")
     tree = attach_iter_space_info.transform(tree)
     tree = insert_allocations.transform(tree)
+
+    if options.get("no_loop", False):
+        tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
+        return ast_to_code(tree)
+
     tree = op_to_loop.transform(tree)
     tree = sparsify_loops.transform(tree)
     tree = rewrite_shape_attr_to_var.transform(tree)
