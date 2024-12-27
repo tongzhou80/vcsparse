@@ -28,5 +28,5 @@ def f7(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr'), C: Tensor('i,j', 'csr')
     return A + B + C
 
 for f in [f0, f2, f3, f4, f5, f6, f7]:
-    newcode = compile_from_src(inspect.getsource(f), full_opt=True)
+    newcode = compile_from_src(inspect.getsource(f), full_opt=True, backend='appy')
     print(newcode)

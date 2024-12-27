@@ -10,6 +10,7 @@ class ReplaceName(ast.NodeTransformer):
             node.id = self.replace_map[node.id]
         return node
 
+
 class CopyPropagate(ast.NodeTransformer):
     def __init__(self):
         self.replacements = {}
@@ -86,6 +87,7 @@ class CopyPropagate(ast.NodeTransformer):
         # Clear the replacement map
         self.replacements.clear()
         return node
+
 
 def transform(tree):
     return CopyPropagate().visit(tree)

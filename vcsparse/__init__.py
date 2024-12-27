@@ -105,6 +105,7 @@ def compile_from_src(src, **options):
         return ast_to_code(tree)
 
     tree = op_to_loop.transform(tree)
+    tree = apply_transform_on_ast(tree, "where_to_ternary")
     tree = sparsify_loops.transform(tree)
     tree = rewrite_shape_attr_to_var.transform(tree)
     if options.get("trie_fuse", False):
@@ -122,7 +123,6 @@ def compile_from_src(src, **options):
         tree = intraloop_scalar_replacement.transform(tree)
         tree = remove_unused_array_stores.transform(tree)
 
-    tree = apply_transform_on_ast(tree, "where_to_ternary")
     tree = apply_transform_on_ast(tree, "remove_func_arg_annotation")
     return ast_to_code(tree)
 
