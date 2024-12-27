@@ -64,6 +64,10 @@ def test_sparse_add_sparse():
         assert np.allclose(f0(A, B), (A + B).toarray())
         assert np.allclose(f1(A, B, C), (A + B + C).toarray())
 
+        t0 = triton.testing.do_bench(lambda: (A + B))
+        t1 = triton.testing.do_bench(lambda: f0(A, B))
+        print(t0, t1, f'{(t0/t1):.3f}')
+        
         t0 = triton.testing.do_bench(lambda: (A + B + C))
         t1 = triton.testing.do_bench(lambda: f1(A, B, C))
         print(t0, t1, f'{(t0/t1):.3f}')
