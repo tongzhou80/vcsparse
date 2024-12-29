@@ -15,9 +15,9 @@ def f1(A: Tensor('i,j', 'csr'), B: Tensor('i,j', 'csr'), C: Tensor('i,j', 'csr')
 
 def test_sparse_mul_sparse():
     for N in [1000, 4000, 8000]:
-        A = sp.random(N, N, density=0.5, format='csr')
-        B = sp.random(N, N, density=0.5, format='csr')
-        C = sp.random(N, N, density=0.5, format='csr')
+        A = sp.random(N, N, density=0.1, format='csr')
+        B = sp.random(N, N, density=0.1, format='csr')
+        C = sp.random(N, N, density=0.1, format='csr')
         assert np.allclose(f0(A, B), (A.multiply(B)).toarray())
         assert np.allclose(f1(A, B, C), A.multiply(B).multiply(C).toarray())
 
