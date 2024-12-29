@@ -6,8 +6,8 @@ class NameToSubscript(ast.NodeTransformer):
         self.indices_map = indices_map
 
     def visit_Name(self, node):
-        indices = self.indices_map.get(node.id, None)
-        if indices is not None:
+        indices = self.indices_map.get(node.id, [])
+        if indices:
             subscript = new_ast_subscript(
                 value=node,
                 indices=[new_ast_name(i) for i in indices],

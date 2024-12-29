@@ -110,13 +110,14 @@ def compile_from_src(src, **options):
     tree = rewrite_shape_attr_to_var.transform(tree)
     if options.get("trie_fuse", False):
         tree = trie_fuse.transform(tree)
-    tree = rename_loop_indices.transform(tree)
+
     if options.get("backend", "numba") == "numba":
         if options.get("parallelize", False):
             tree = parallelize.transform(tree)
         tree = create_inner_kernel.transform(tree)
         tree = gen_numba_code.transform(tree, options.get("parallelize", False))
     elif options.get("backend", "numba") == "appy":
+        tree = rename_loop_indices.transform(tree)
         tree = create_inner_kernel.transform(tree)
         tree = gen_appy_code.transform(tree)
 
