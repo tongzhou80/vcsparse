@@ -31,15 +31,15 @@ class LoopFinder(ast.NodeVisitor):
 class AnnotateInnerLoop(ast.NodeTransformer):
     def visit_For(self, node):
         self.generic_visit(node)
+        visitor = LoopFinder()
+        visitor.visit(node)
         # If the loop is an innermost loop, annotate it with `#pragma simd`
-        if not hasattr(node, 'is_reduction'):
-            visitor = LoopFinder()
-            visitor.visit(node)
-
-            # FIXME: The sparse loop cannot be vectorized for now due to a conflicting type error for the index if reassigned
-            if len(visitor.loops) == 1: # and not node.target.id.startswith('__p'):
+        if len(visitor.loops) == 1:
+            if hasattr(node, 'is_reduction'):
+                comment = ast.Comment(value='#pragma simd(512)', inline=False)
+            else:
                 comment = ast.Comment(value='#pragma simd(128)', inline=False)
-                return comment, node
+            return comment, node
 
         return node
 
