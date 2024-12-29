@@ -37,8 +37,8 @@ class AnnotateInnerLoop(ast.NodeTransformer):
             visitor.visit(node)
 
             # FIXME: The sparse loop cannot be vectorized for now due to a conflicting type error for the index if reassigned
-            if len(visitor.loops) == 1 and not node.target.id.startswith('__p'):
-                comment = ast.Comment(value='#pragma simd', inline=False)
+            if len(visitor.loops) == 1: # and not node.target.id.startswith('__p'):
+                comment = ast.Comment(value='#pragma simd(128)', inline=False)
                 return comment, node
 
         return node
