@@ -10,7 +10,7 @@ from .transforms import remove_unused_array_stores, to_single_sparse_operand_for
 from .transforms import check_for_undefined, convert_matmul_op_to_call, remove_none_axis, mark_transpose_ops
 from .transforms import convert_sparse_multiply_call, fix_sparse_operand_to_left, attach_iter_space_info
 from .transforms import mark_sparse_output, rewrite_shape_attr_to_var, create_inner_kernel, gen_appy_code
-from .transforms import copy_propagate
+from .transforms import copy_propagate, rename_loop_indices
 
 def Index(*args):
     pass
@@ -110,6 +110,7 @@ def compile_from_src(src, **options):
     tree = rewrite_shape_attr_to_var.transform(tree)
     if options.get("trie_fuse", False):
         tree = trie_fuse.transform(tree)
+    tree = rename_loop_indices.transform(tree)
     if options.get("backend", "numba") == "numba":
         if options.get("parallelize", False):
             tree = parallelize.transform(tree)
