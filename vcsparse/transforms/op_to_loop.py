@@ -17,6 +17,7 @@ class NameToSubscript(ast.NodeTransformer):
         else:
             return node
 
+
 class OpToLoop(ast.NodeTransformer):
     def __init__(self, trie_fuse=False):
         self.top_level_loops = []
@@ -83,7 +84,7 @@ class OpToLoop(ast.NodeTransformer):
             loop = MarkLoopAsReduction(reduction_index).visit(loop)
             # Insert initialization at proper place
             initialization = new_ast_assign(
-                node.targets[0],
+                deepcopy_ast_node(node.targets[0]),
                 get_init_value_for_reduction(node.value.func.id)
             )
             initialization_indices = self.indices_map[node.def_vars[0]]
