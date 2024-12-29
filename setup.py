@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="vcsparse",                    # Name of the package
-    version="0.1.1",                    # Version
+    version="0.1.2",                    # Version
     author="Tong Zhou",                 # Your name
     author_email="zt9465@gmail.com", # Your email
     description="Generate fused and vectorizable kernels for sparse tensor programs on CPUs and GPUs", # Short description
